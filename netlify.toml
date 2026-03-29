@@ -1,0 +1,33 @@
+[build]
+  publish = "."
+
+# POST /signup  →  function extracts JWT, redirects to signup.html?token=...
+[[redirects]]
+  from    = "/signup"
+  to      = "/.netlify/functions/gcp-signup"
+  status  = 200
+  force   = true
+  conditions = { Method = ["POST"] }
+
+# GET /signup  →  signup page
+[[redirects]]
+  from   = "/signup"
+  to     = "/signup.html"
+  status = 200
+
+# POST /login  →  function extracts SSO JWT, redirects to login.html?token=...
+[[redirects]]
+  from    = "/login"
+  to      = "/.netlify/functions/gcp-login"
+  status  = 200
+  force   = true
+  conditions = { Method = ["POST"] }
+
+# GET /login  →  login page
+[[redirects]]
+  from   = "/login"
+  to     = "/login.html"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
