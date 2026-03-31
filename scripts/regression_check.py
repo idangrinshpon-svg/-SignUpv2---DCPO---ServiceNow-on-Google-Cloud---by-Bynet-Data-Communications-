@@ -256,6 +256,15 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     contact = request("GET", f"{base_url}/contact")
     expect_ok_or_trailing_slash_redirect(contact, "/contact", "GET /contact resolves correctly", failures)
 
+    marketplace = request("GET", f"{base_url}/marketplace")
+    expect_ok_or_trailing_slash_redirect(marketplace, "/marketplace", "GET /marketplace resolves correctly", failures)
+
+    instance_help = request("GET", f"{base_url}/instance-help")
+    expect_ok_or_trailing_slash_redirect(instance_help, "/instance-help", "GET /instance-help resolves correctly", failures)
+
+    access_help = request("GET", f"{base_url}/access-help")
+    expect_ok_or_trailing_slash_redirect(access_help, "/access-help", "GET /access-help resolves correctly", failures)
+
     signup_links = LinkCollector()
     signup_links.feed(signup.body)
     expect(
@@ -280,9 +289,26 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         failures,
     )
     expect(
+        "/marketplace" in login_links.hrefs and "/instance-help" in login_links.hrefs,
+        "login page support links point to internal subpages",
+        f"found links: {login_links.hrefs!r}",
+        failures,
+    )
+    expect(
         "/privacy" in signup_links.hrefs and "/terms" in signup_links.hrefs and "/contact" in signup_links.hrefs,
         "signup page footer links point to internal subpages",
         f"found links: {signup_links.hrefs!r}",
+        failures,
+    )
+
+    access_help_page = request(
+        "GET",
+        f"{base_url}/access-help/?instance=acme&target=https%3A%2F%2Facme.service-now.com%2Flogin.do",
+    )
+    expect(
+        "Complete Access With Your Service Provider" in access_help_page.body and "Requested Instance" in access_help_page.body,
+        "access-help page renders provider guidance shell",
+        "missing expected access-help heading or summary placeholders",
         failures,
     )
 

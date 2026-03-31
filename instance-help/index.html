@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instance Help - DCPO ServiceNow on Google Cloud | Bynet</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #10202b;
+      --muted: #5a6b77;
+      --border: #d9e2ea;
+      --accent: #0a3622;
+      --link: #1a73e8;
+      --warn-bg: #fff7ed;
+      --warn-border: #fed7aa;
+      --warn-text: #9a3412;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--text); background: linear-gradient(180deg, #eef4f2 0%, var(--bg) 220px); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 72px; }
+    .nav { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; font-size: 14px; }
+    .nav a { color: var(--link); text-decoration: none; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; box-shadow: 0 14px 44px rgba(0,0,0,.06); }
+    h1 { margin: 0 0 8px; font-size: 32px; color: var(--accent); }
+    p, li { line-height: 1.7; color: var(--muted); font-size: 15px; }
+    ul { padding-left: 20px; }
+    .warn { margin-top: 22px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--warn-border); background: var(--warn-bg); color: var(--warn-text); font-size: 14px; line-height: 1.6; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; border-radius: 12px; text-decoration: none; font-weight: 600; border: 1px solid var(--border); color: var(--text); background: #fff; }
+    .btn.primary { background: var(--link); border-color: var(--link); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/signup">Signup</a>
+      <a href="/login">Login</a>
+      <a href="/marketplace">Marketplace</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="card">
+      <h1>Find Your ServiceNow Instance</h1>
+      <p>Use the exact ServiceNow tenant hostname assigned to your environment. The login page expects only the subdomain portion.</p>
+      <ul>
+        <li>If your full URL is `https://acme.service-now.com`, enter `acme`.</li>
+        <li>Use the hostname from your welcome email, implementation document, or IT administrator.</li>
+        <li>Do not assume your company name is automatically the ServiceNow instance name.</li>
+      </ul>
+      <div class="warn">
+        Example: if you enter `bynet`, the site will try `https://bynet.service-now.com/login.do`. If that hostname does not exist, the browser will show a reachability error.
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/login">Back to Login</a>
+        <a class="btn" href="/contact">Contact Bynet</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

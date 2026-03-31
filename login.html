@@ -73,6 +73,10 @@
     .inst-icon svg{width:17px;height:17px;color:var(--txt3)}
     .inst-suffix{position:absolute;right:14px;font-size:12px;color:var(--txt3);font-weight:500;pointer-events:none;white-space:nowrap}
     .inst-hint{font-size:11px;color:var(--txt3);margin-top:5px}
+    .inst-preview{margin-top:8px;font-size:11px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;display:none}
+    .inst-preview.show{display:block}
+    .inst-warning{margin-top:8px;font-size:11px;color:#92400e;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;display:none}
+    .inst-warning.show{display:block}
 
     /* Divider */
     .or{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--txt3);font-size:12px}
@@ -142,7 +146,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:16px">
     <span class="hdr-badge">Existing Customer</span>
-    <a href="signup.html" class="hdr-link">New customer? Register -></a>
+    <a href="/signup" class="hdr-link">New customer? Register -></a>
   </div>
 </header>
 
@@ -190,7 +194,9 @@
           <input type="text" id="instance" placeholder="your-company" autocomplete="off" autocapitalize="none" spellcheck="false"/>
           <span class="inst-suffix">.service-now.com</span>
         </div>
-        <div class="inst-hint">Enter the subdomain of your ServiceNow instance (e.g. <strong>acme</strong> for acme.service-now.com)</div>
+        <div class="inst-hint">Enter the exact subdomain of your ServiceNow instance (e.g. <strong>acme</strong> for acme.service-now.com).</div>
+        <div class="inst-preview" id="inst-preview"></div>
+        <div class="inst-warning" id="inst-warning">Use your exact ServiceNow tenant hostname from the welcome email or your IT administrator. A company name by itself may not be a valid ServiceNow instance.</div>
       </div>
 
       <!-- Primary action: go to instance -->
@@ -202,7 +208,7 @@
       <div class="or">or</div>
 
       <!-- Secondary: open GCP Marketplace console -->
-      <a class="btn-secondary" href="https://console.cloud.google.com/marketplace" target="_blank" rel="noopener">
+      <a class="btn-secondary" href="/marketplace">
         <svg viewBox="0 0 16 16" fill="none">
           <rect x="1" y="1" width="6" height="6" rx="1" fill="#4285F4"/>
           <rect x="9" y="1" width="6" height="6" rx="1" fill="#EA4335"/>
@@ -219,7 +225,7 @@
         </div>
         <div class="help-row-body">
           <strong>Don't know your instance URL?</strong>
-          Check your welcome email from Bynet, or contact your IT administrator. If you don't yet have an account, <a href="signup.html">register here</a> or email <a href="mailto:servicenow@bynet.co.il">servicenow@bynet.co.il</a>.
+          Check your welcome email from Bynet, review <a href="/instance-help">instance help</a>, or contact your IT administrator. If you don't yet have an account, <a href="/signup">register here</a> or use the <a href="/contact">contact page</a>.
         </div>
       </div>
 
@@ -228,7 +234,7 @@
     <!-- Footer -->
     <div class="card-ft">
       <p>New to ServiceNow on Google Cloud?</p>
-      <a href="signup.html">Create an account -></a>
+      <a href="/signup">Create an account -></a>
     </div>
 
   </div>
@@ -287,15 +293,12 @@
       return;
     }
     var userIdentity=payload&&payload.google&&payload.google.user_identity;
-    // Auto-redirect after a short moment so user sees the SSO banner
-    // In production: redirect to your IdP / ServiceNow SSO endpoint passing login_hint
+    // Route to an internal guidance page first so users do not land on a dead instance URL.
     setTimeout(function(){
       var inst=document.getElementById('instance').value.trim()||'';
       if(inst){
-        var base='https://'+inst+'.service-now.com';
-        var url=base+'/login.do'+(userIdentity?'?login_hint='+encodeURIComponent(userIdentity):'');
         document.getElementById('loading').classList.add('on');
-        window.location.href=url;
+        openAccessHelp(inst, userIdentity);
       }
     },1800);
   }
@@ -315,8 +318,40 @@
     var token=params.get('x-gcp-marketplace-token')||params.get('token')||'';
     var payload=token?parseJwt(token):null;
     var hint=payload&&payload.google&&payload.google.user_identity;
-    var url='https://'+inst+'.service-now.com/login.do'+(hint?'?login_hint='+encodeURIComponent(hint):'');
-    window.location.href=url;
+    openAccessHelp(inst, hint);
+  }
+
+  function openAccessHelp(inst, hint){
+    var target='https://'+inst+'.service-now.com/login.do'+(hint?'?login_hint='+encodeURIComponent(hint):'');
+    var params=new URLSearchParams();
+    params.set('instance', inst);
+    params.set('target', target);
+    if(hint) params.set('hint', hint);
+    window.location.href='/access-help/?'+params.toString();
+  }
+
+  function updateInstancePreview(){
+    var input=document.getElementById('instance');
+    var preview=document.getElementById('inst-preview');
+    var warning=document.getElementById('inst-warning');
+    var inst=input.value.trim().toLowerCase()
+      .replace(/^https?:\/\//,'').replace(/\.service-now\.com.*/,'');
+
+    if(!inst){
+      preview.classList.remove('show');
+      warning.classList.remove('show');
+      preview.textContent='';
+      return;
+    }
+
+    preview.textContent='Destination: https://'+inst+'.service-now.com/login.do';
+    preview.classList.add('show');
+
+    if(inst === 'bynet' || inst === 'servicenow' || inst === 'google'){
+      warning.classList.add('show');
+    } else {
+      warning.classList.remove('show');
+    }
   }
 
   window.addEventListener('DOMContentLoaded',function(){
@@ -328,7 +363,9 @@
     });
     document.getElementById('instance').addEventListener('input',function(){
       this.style.borderColor='';this.style.boxShadow='';
+      updateInstancePreview();
     });
+    updateInstancePreview();
   });
 })();
 </script>

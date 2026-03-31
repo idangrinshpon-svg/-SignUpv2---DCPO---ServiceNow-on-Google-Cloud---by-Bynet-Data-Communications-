@@ -36,3 +36,15 @@ test("footer subpages exist", async ({ page }) => {
   await page.goto("/contact");
   await expect(page.getByRole("heading", { name: /Contact/i })).toBeVisible();
 });
+
+test("guide subpages exist", async ({ page }) => {
+  await page.goto("/marketplace");
+  await expect(page.getByRole("heading", { name: /Google Cloud Marketplace/i })).toBeVisible();
+
+  await page.goto("/instance-help");
+  await expect(page.getByRole("heading", { name: /Find Your ServiceNow Instance/i })).toBeVisible();
+
+  await page.goto("/access-help/?instance=acme&target=https%3A%2F%2Facme.service-now.com%2Flogin.do");
+  await expect(page.getByRole("heading", { name: /Complete Access With Your Service Provider/i })).toBeVisible();
+  await expect(page.locator("#instance-value")).toContainText("acme.service-now.com");
+});
