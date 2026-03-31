@@ -80,6 +80,24 @@ def request(
         return Response(exc.code, dict(exc.headers.items()), body)
 
 
+def expect_ok_or_trailing_slash_redirect(
+    response: Response,
+    path: str,
+    label: str,
+    failures: list[str],
+) -> None:
+    location = response.headers.get("Location")
+    ok = response.status == 200 or (
+        response.status in {301, 302, 307, 308} and location in {f"{path}/", f"{path}/"}
+    )
+    expect(
+        ok,
+        label,
+        f"got status={response.status}, location={location!r}",
+        failures,
+    )
+
+
 def make_expired_jwt() -> str:
     header = {"alg": "none", "typ": "JWT"}
     payload = {"exp": 1}
@@ -229,6 +247,15 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         failures,
     )
 
+    privacy = request("GET", f"{base_url}/privacy")
+    expect_ok_or_trailing_slash_redirect(privacy, "/privacy", "GET /privacy resolves correctly", failures)
+
+    terms = request("GET", f"{base_url}/terms")
+    expect_ok_or_trailing_slash_redirect(terms, "/terms", "GET /terms resolves correctly", failures)
+
+    contact = request("GET", f"{base_url}/contact")
+    expect_ok_or_trailing_slash_redirect(contact, "/contact", "GET /contact resolves correctly", failures)
+
     signup_links = LinkCollector()
     signup_links.feed(signup.body)
     expect(
@@ -244,6 +271,18 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         "signup.html" in login_links.hrefs or "/signup" in login_links.hrefs,
         "login page keeps a path to register",
         f"found links: {login_links.hrefs!r}",
+        failures,
+    )
+    expect(
+        "/privacy" in login_links.hrefs and "/terms" in login_links.hrefs and "/contact" in login_links.hrefs,
+        "login page footer links point to internal subpages",
+        f"found links: {login_links.hrefs!r}",
+        failures,
+    )
+    expect(
+        "/privacy" in signup_links.hrefs and "/terms" in signup_links.hrefs and "/contact" in signup_links.hrefs,
+        "signup page footer links point to internal subpages",
+        f"found links: {signup_links.hrefs!r}",
         failures,
     )
 

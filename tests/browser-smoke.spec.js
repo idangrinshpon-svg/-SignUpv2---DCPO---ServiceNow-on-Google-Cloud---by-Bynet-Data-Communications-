@@ -25,3 +25,14 @@ test("signup error state is visible", async ({ page }) => {
   await page.goto("/signup.html?error=token_expired");
   await expect(page.getByText(/marketplace session has expired/i)).toBeVisible();
 });
+
+test("footer subpages exist", async ({ page }) => {
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { name: /Privacy Policy/i })).toBeVisible();
+
+  await page.goto("/terms");
+  await expect(page.getByRole("heading", { name: /Terms/i })).toBeVisible();
+
+  await page.goto("/contact");
+  await expect(page.getByRole("heading", { name: /Contact/i })).toBeVisible();
+});
