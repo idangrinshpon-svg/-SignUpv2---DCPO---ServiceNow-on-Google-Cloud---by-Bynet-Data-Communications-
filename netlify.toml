@@ -1,33 +1,48 @@
 [build]
   publish = "."
 
-# POST /signup  →  function extracts JWT, redirects to signup.html?token=...
 [[redirects]]
-  from    = "/signup"
-  to      = "/.netlify/functions/gcp-signup"
-  status  = 200
-  force   = true
+  from = "/signup"
+  to = "/.netlify/functions/gcp-signup"
+  status = 200
+  force = true
   conditions = { Method = ["POST"] }
 
-# GET /signup  →  signup page
 [[redirects]]
-  from   = "/signup"
-  to     = "/signup.html"
+  from = "/login"
+  to = "/.netlify/functions/gcp-login"
   status = 200
-
-# POST /login  →  function extracts SSO JWT, redirects to login.html?token=...
-[[redirects]]
-  from    = "/login"
-  to      = "/.netlify/functions/gcp-login"
-  status  = 200
-  force   = true
+  force = true
   conditions = { Method = ["POST"] }
-
-# GET /login  →  login page
-[[redirects]]
-  from   = "/login"
-  to     = "/login.html"
-  status = 200
 
 [functions]
   directory = "netlify/functions"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests"
+    Permissions-Policy = "camera=(), geolocation=(), microphone=()"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/signup"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/login"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/signup.html"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/login.html"
+  [headers.values]
+    Cache-Control = "no-store"

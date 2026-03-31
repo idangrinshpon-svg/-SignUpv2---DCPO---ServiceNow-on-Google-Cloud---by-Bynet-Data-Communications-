@@ -1,0 +1,14 @@
+{
+  "name": "dcpo-deploy",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "regression:live": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1",
+    "regression:browser": "playwright test",
+    "regression:all": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1 && playwright test",
+    "test": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1 && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

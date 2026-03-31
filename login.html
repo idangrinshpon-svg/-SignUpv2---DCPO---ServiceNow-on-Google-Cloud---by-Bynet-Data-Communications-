@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In – DCPO ServiceNow on Google Cloud | Bynet</title>
+  <title>Sign In - DCPO ServiceNow on Google Cloud | Bynet</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -53,12 +53,15 @@
     /* Card body */
     .card-body{padding:28px 32px}
 
-    /* SSO banner — shown when GCP sends JWT */
+    /* SSO banner - shown when GCP sends JWT */
     .sso-bar{display:none;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--rs);padding:11px 14px;margin-bottom:22px}
     .sso-bar.show{display:flex}
     .sso-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0;animation:pulse 1.8s infinite}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
     .sso-bar span{font-size:12px;color:#1e40af;font-weight:500}
+    .err-bar{display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--rs);padding:11px 14px;margin-bottom:22px}
+    .err-bar.show{display:flex}
+    .err-bar span{font-size:12px;color:#991b1b;font-weight:500}
 
     /* Instance input */
     .inst-group{margin-bottom:22px}
@@ -117,7 +120,7 @@
 </head>
 <body>
 
-<div id="loading"><div class="spin"></div><p>Connecting to your ServiceNow instance…</p></div>
+<div id="loading"><div class="spin"></div><p>Connecting to your ServiceNow instance...</p></div>
 
 <!-- HEADER -->
 <header class="hdr">
@@ -139,7 +142,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:16px">
     <span class="hdr-badge">Existing Customer</span>
-    <a href="signup.html" class="hdr-link">New customer? Register →</a>
+    <a href="signup.html" class="hdr-link">New customer? Register -></a>
   </div>
 </header>
 
@@ -163,10 +166,15 @@
     <!-- Card Body -->
     <div class="card-body">
 
-      <!-- SSO banner — visible when GCP sends POST with JWT -->
+      <!-- SSO banner - visible when GCP sends POST with JWT -->
       <div class="sso-bar" id="sso-bar">
         <div class="sso-dot"></div>
-        <span>Google Cloud SSO active — redirecting you to your instance…</span>
+        <span>Google Cloud SSO active - redirecting you to your instance...</span>
+      </div>
+
+      <div class="err-bar" id="err-bar">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="7" fill="#ef4444"/><path d="M7 4v3.5M7 9.5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span id="err-msg">We couldn't verify your marketplace session. Please try again from Google Cloud Marketplace.</span>
       </div>
 
       <!-- Instance URL input -->
@@ -220,14 +228,14 @@
     <!-- Footer -->
     <div class="card-ft">
       <p>New to ServiceNow on Google Cloud?</p>
-      <a href="signup.html">Create an account →</a>
+      <a href="signup.html">Create an account -></a>
     </div>
 
   </div>
 </div>
 
 <footer class="pgfoot">
-  <div class="pgfoot-l">&copy; 2025 Bynet Data Communications Ltd. · ServiceNow on Google Cloud Marketplace</div>
+  <div class="pgfoot-l">&copy; 2025 Bynet Data Communications Ltd. - ServiceNow on Google Cloud Marketplace</div>
   <div class="pgfoot-r">
     <a href="https://www.bynet.co.il/privacy" target="_blank" rel="noopener">Privacy Policy</a>
     <a href="https://www.bynet.co.il/terms" target="_blank" rel="noopener">Terms</a>
@@ -246,11 +254,21 @@
     }catch(e){return null;}
   }
 
-  // ── SSO: GCP sends a POST to /login with x-gcp-marketplace-token
+  function showError(msg){
+    document.getElementById('err-msg').textContent=msg||'We could not verify your marketplace session. Please try again from Google Cloud Marketplace.';
+    document.getElementById('err-bar').classList.add('show');
+  }
+  // SSO: GCP sends a POST to /login with x-gcp-marketplace-token
   // The Netlify function (gcp-login) reads it and redirects here with the token.
   // We then immediately redirect the user to their ServiceNow instance with SSO params.
   function initSso(){
     var params=new URLSearchParams(window.location.search);
+    var err=params.get('error');
+    if(err){
+      var msgs={missing_token:'No marketplace token was received. Please start from Google Cloud Marketplace.',invalid_token:'The marketplace token is invalid. Please try again from Google Cloud Marketplace.',token_expired:'The marketplace session expired. Please start again from Google Cloud Marketplace.',server_error:'A server error occurred. Please try again or contact servicenow@bynet.co.il.'};
+      showError(msgs[err]||msgs.server_error);
+      return;
+    }
     var token=params.get('x-gcp-marketplace-token')||params.get('token');
     if(!token) return;
 
@@ -258,8 +276,17 @@
     ssoBar.classList.add('show');
 
     var payload=parseJwt(token);
+    if(!payload){
+      ssoBar.classList.remove('show');
+      showError('The marketplace token could not be parsed. Please retry from Google Cloud Marketplace.');
+      return;
+    }
+    if(payload.exp && Date.now()/1000>payload.exp){
+      ssoBar.classList.remove('show');
+      showError('The marketplace session expired. Please retry from Google Cloud Marketplace.');
+      return;
+    }
     var userIdentity=payload&&payload.google&&payload.google.user_identity;
-
     // Auto-redirect after a short moment so user sees the SSO banner
     // In production: redirect to your IdP / ServiceNow SSO endpoint passing login_hint
     setTimeout(function(){
