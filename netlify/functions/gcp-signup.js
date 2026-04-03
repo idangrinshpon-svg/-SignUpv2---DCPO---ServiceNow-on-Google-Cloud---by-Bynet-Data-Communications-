@@ -27,6 +27,7 @@ exports.handler = async (event) => {
 
     const params = buildVerifiedParams(result.payload);
     params.set('approval_mode', 'automatic');
+    params.set('approval_status', 'pending');
     params.set('offer_state', 'accepted');
     params.set('source', demo ? 'demo' : 'gcp');
     return redirect(`/signup.html?${params.toString()}`);

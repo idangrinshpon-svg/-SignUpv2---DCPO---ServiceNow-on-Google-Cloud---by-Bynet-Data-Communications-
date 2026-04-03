@@ -145,6 +145,22 @@ def make_sample_entitlement(entitlement_id: str) -> dict[str, object]:
     }
 
 
+def make_past_entitlement(entitlement_id: str) -> dict[str, object]:
+    start = make_future_iso(-7)
+    end = make_future_iso(23)
+    return {
+        "eventId": "evt-demo-2",
+        "eventType": "ENTITLEMENT_OFFER_ACCEPTED",
+        "entitlement": {
+            "id": entitlement_id,
+            "updateTime": make_future_iso(0),
+            "newPendingOfferDuration": "P30D",
+            "newOfferStartTime": start,
+            "newOfferEndTime": end,
+        },
+    }
+
+
 def make_pubsub_envelope(payload: dict[str, object]) -> dict[str, object]:
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     return {
@@ -382,11 +398,72 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         failures,
     )
 
+    approval_response = request(
+        "POST",
+        f"{base_url}/.netlify/functions/marketplace-entitlement-approval",
+        json_body={"entitlement_id": entitlement_id, "approved_by": "regression-check"},
+    )
+    expect(
+        approval_response.status == 200 and '"approvalStatus":"approved"' in approval_response.body,
+        "POST marketplace-entitlement-approval approves the stored offer",
+        f"got status={approval_response.status}, body={approval_response.body!r}",
+        failures,
+    )
+
+    approved_record = request(
+        "GET",
+        f"{base_url}/.netlify/functions/marketplace-entitlements?entitlement_id={entitlement_id}",
+    )
+    expect(
+        approved_record.status == 200,
+        "GET marketplace-entitlements remains reachable after approval",
+        f"got status={approved_record.status}, body={approved_record.body!r}",
+        failures,
+    )
+
+    rejected_id = "demo-entitlement-rejected"
+    rejected_seed = request(
+        "POST",
+        f"{base_url}/.netlify/functions/marketplace-entitlements",
+        json_body=make_pubsub_envelope(make_past_entitlement(rejected_id)),
+    )
+    expect(
+        rejected_seed.status == 202,
+        "POST marketplace-entitlements auto-rejects past-start offers",
+        f"got status={rejected_seed.status}, body={rejected_seed.body!r}",
+        failures,
+    )
+
+    rejected_record = request(
+        "GET",
+        f"{base_url}/.netlify/functions/marketplace-entitlements?entitlement_id={rejected_id}",
+    )
+    expect(
+        rejected_record.status == 200 and '"status":"rejected"' in rejected_record.body and '"approvalStatus":"rejected"' in rejected_record.body,
+        "GET marketplace-entitlements reflects auto-rejected offers",
+        f"got status={rejected_record.status}, body={rejected_record.body!r}",
+        failures,
+    )
+
+    reconcile = request("GET", f"{base_url}/.netlify/functions/marketplace-entitlements-reconcile")
+    expect(
+        reconcile.status == 200 and '"ok":true' in reconcile.body,
+        "GET marketplace-entitlements-reconcile runs successfully",
+        f"got status={reconcile.status}, body={reconcile.body!r}",
+        failures,
+    )
+
     entitlement_page = request(
         "GET",
         f"{base_url}/entitlement-status/?entitlement_id={entitlement_id}",
     )
     expect_ok_or_trailing_slash_redirect(entitlement_page, "/entitlement-status", "GET /entitlement-status resolves correctly", failures)
+    expect(
+        "Approve Customer Account" in entitlement_page.body and "Approval Status" in entitlement_page.body,
+        "entitlement status page exposes approval controls and state",
+        "missing approval control markup",
+        failures,
+    )
 
 
 def run_local_checks(failures: list[str]) -> None:
@@ -397,6 +474,8 @@ def run_local_checks(failures: list[str]) -> None:
             "require('./netlify/functions/gcp-login.js');"
             "require('./netlify/functions/gcp-signup.js');"
             "require('./netlify/functions/marketplace-entitlements.js');"
+            "require('./netlify/functions/marketplace-entitlement-approval.js');"
+            "require('./netlify/functions/marketplace-entitlements-reconcile.js');"
             "console.log('syntax_ok');"
         ),
     ]

@@ -253,6 +253,10 @@
             <strong id="gcp-approval-view">Not loaded</strong>
           </div>
           <div class="gcp-meta-item">
+            <span>Approval Status</span>
+            <strong id="gcp-approval-state-view">Not loaded</strong>
+          </div>
+          <div class="gcp-meta-item">
             <span>Start Time</span>
             <strong id="gcp-start-view">Not loaded</strong>
           </div>
@@ -370,11 +374,16 @@
     setText('gcp-identity-view', document.getElementById('gcp-identity').value, 'Not available');
     setText('gcp-offer-view', record.status || 'Not available', 'Not available');
     setText('gcp-approval-view', record.isAutomaticApproval ? 'automatic' : 'manual', 'Not available');
+    setText('gcp-approval-state-view', record.approvalStatus || 'pending', 'Not available');
     setText('gcp-start-view', entitlement.newOfferStartTime, 'Not available');
     setText('gcp-end-view', entitlement.newOfferEndTime, 'Not available');
     document.getElementById('gcp-note').textContent = record.status === 'scheduled'
-      ? 'This offer has been accepted but is scheduled to start later. Customer account approval is still required before the scheduled start time.'
-      : 'The entitlement has been accepted. If the offer is active, continue with normal provisioning and access setup.';
+      ? (record.approvalStatus === 'approved'
+        ? 'This offer has been accepted and approved. It will become active at the scheduled start time.'
+        : 'This offer has been accepted but is scheduled to start later. Customer account approval is still required before the scheduled start time.')
+      : record.status === 'rejected'
+        ? 'This offer was automatically rejected because customer account approval was not completed before the scheduled start time.'
+        : 'The entitlement has been accepted. If the offer is active, continue with normal provisioning and access setup.';
   }
 
   function showError(msg){
@@ -421,12 +430,13 @@
     document.getElementById('gcp-account').value=account;
     document.getElementById('gcp-identity').value=identity;
 
-    if(account || identity || verified){
+      if(account || identity || verified){
       document.getElementById('gcp-meta').classList.add('show');
       setText('gcp-account-view', account, 'Not available');
       setText('gcp-identity-view', identity, 'Not available');
       setText('gcp-offer-view', offerState, 'Not available');
       setText('gcp-approval-view', approvalMode, 'Not available');
+      setText('gcp-approval-state-view', params.get('approval_status') || 'pending', 'Not available');
     }
 
     if(verified){

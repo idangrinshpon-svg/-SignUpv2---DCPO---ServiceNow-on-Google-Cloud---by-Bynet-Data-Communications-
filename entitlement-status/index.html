@@ -117,6 +117,13 @@
       background: #fff;
     }
     .btn.primary { color: #fff; background: linear-gradient(135deg, var(--blue) 0%, #0f5dc0 100%); border-color: var(--blue); }
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    #approve-btn { display: none; }
     .note {
       margin-top: 16px;
       border-radius: 16px;
@@ -171,6 +178,14 @@
             <strong id="event-type">Not loaded</strong>
           </div>
           <div class="pill">
+            <span>Approval Status</span>
+            <strong id="approval-status">Not loaded</strong>
+          </div>
+          <div class="pill">
+            <span>Approved At</span>
+            <strong id="approved-at">Not loaded</strong>
+          </div>
+          <div class="pill">
             <span>Start Time</span>
             <strong id="start-time">Not loaded</strong>
           </div>
@@ -201,6 +216,7 @@
         </ul>
         <div class="actions">
           <a class="btn primary" href="/contact">Contact Bynet</a>
+          <button class="btn primary" id="approve-btn" type="button">Approve Customer Account</button>
           <a class="btn" href="/instance-help">Find Instance</a>
           <a class="btn" href="/login">Back to Login</a>
         </div>
@@ -216,6 +232,8 @@
       var params = new URLSearchParams(window.location.search);
       var entitlementId = params.get('entitlement_id') || '';
       var endpoint = '/.netlify/functions/marketplace-entitlements' + (entitlementId ? '?entitlement_id=' + encodeURIComponent(entitlementId) : '?latest=1');
+      var approvalEndpoint = '/.netlify/functions/marketplace-entitlement-approval';
+      var currentRecord = null;
 
       function setText(id, value, fallback) {
         document.getElementById(id).textContent = value || fallback;
@@ -225,25 +243,82 @@
         var badge = document.getElementById('status-badge');
         badge.textContent = status || 'unknown';
         badge.className = 'status ' + (status || 'unknown');
+        if (status === 'rejected') {
+          badge.className = 'status expired';
+        }
+      }
+
+      function setApprovalButton(record) {
+        var button = document.getElementById('approve-btn');
+        var canApprove = !!(record && record.approvalStatus === 'pending' && record.status !== 'rejected');
+        button.style.display = canApprove ? 'inline-flex' : 'none';
+        button.disabled = !canApprove;
       }
 
       function render(record) {
         if (!record) return;
+        currentRecord = record;
         var entitlement = record.entitlement || {};
         setStatus(record.status);
-        setText('headline', record.status === 'scheduled' ? 'Offer is scheduled to start later' : 'Offer status updated');
+        setText('headline', record.status === 'scheduled'
+          ? 'Offer is scheduled to start later'
+          : record.status === 'rejected'
+            ? 'Offer was automatically rejected'
+            : 'Offer status updated');
         setText('summary', record.status === 'scheduled'
           ? 'The Marketplace entitlement has been accepted, and the scheduled start time is in the future.'
-          : 'The Marketplace entitlement has been accepted and the activation window is available below.');
+          : record.status === 'rejected'
+            ? 'The Marketplace entitlement missed the approval window and was automatically rejected.'
+            : 'The Marketplace entitlement has been accepted and the activation window is available below.');
         setText('entitlement-id', entitlement.id, 'Not loaded');
         setText('event-type', record.eventType, 'Not loaded');
+        setText('approval-status', record.approvalStatus || 'Not loaded', 'Not loaded');
+        setText('approved-at', record.approvalApprovedAt || 'Not loaded', 'Not loaded');
         setText('start-time', entitlement.newOfferStartTime, 'Not loaded');
         setText('end-time', entitlement.newOfferEndTime, 'Not loaded');
         setText('pending-duration', entitlement.newPendingOfferDuration, 'Not loaded');
         setText('received-at', record.receivedAt, 'Not loaded');
         document.getElementById('note').textContent = record.status === 'scheduled'
-          ? 'Automatic offer approval still requires account approval before the scheduled start date.'
+          ? (record.approvalStatus === 'approved'
+            ? 'The customer account has been approved. The offer will become active at the scheduled start time.'
+            : 'Automatic offer approval still requires account approval before the scheduled start date. If approval is not completed in time, the offer is automatically rejected.')
+          : record.status === 'rejected'
+            ? 'The offer was automatically rejected because customer account approval was not completed before the scheduled start time.'
           : 'Once the offer is active, continue with the standard provisioning and customer access flow.';
+        setApprovalButton(record);
+      }
+
+      function approveAccount() {
+        if (!currentRecord || !currentRecord.entitlement || !currentRecord.entitlement.id) {
+          return;
+        }
+
+        var button = document.getElementById('approve-btn');
+        button.disabled = true;
+        button.textContent = 'Approving...';
+
+        fetch(approvalEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            entitlement_id: currentRecord.entitlement.id,
+            approved_by: 'customer-account',
+          }),
+        })
+          .then(function (res) {
+            if (!res.ok) {
+              throw new Error('Approval failed');
+            }
+            return res.json();
+          })
+          .then(render)
+          .catch(function () {
+            button.disabled = false;
+            button.textContent = 'Approve Customer Account';
+          });
       }
 
       fetch(endpoint, { headers: { Accept: 'application/json' } })
@@ -259,7 +334,10 @@
           setText('headline', 'No entitlement data found yet', 'No entitlement data found yet');
           setText('summary', 'Submit a Marketplace entitlement event or wait for the backend to store the latest accepted offer.', 'No entitlement data found yet');
           setText('entitlement-id', entitlementId || 'latest');
+          setApprovalButton(null);
         });
+
+      document.getElementById('approve-btn').addEventListener('click', approveAccount);
     })();
   </script>
 </body>

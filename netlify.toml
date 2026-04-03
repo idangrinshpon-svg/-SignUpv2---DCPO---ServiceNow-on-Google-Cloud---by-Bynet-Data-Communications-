@@ -18,6 +18,9 @@
 [functions]
   directory = "netlify/functions"
 
+[functions."marketplace-entitlements-reconcile"]
+  schedule = "*/5 * * * *"
+
 [[headers]]
   for = "/*"
   [headers.values]

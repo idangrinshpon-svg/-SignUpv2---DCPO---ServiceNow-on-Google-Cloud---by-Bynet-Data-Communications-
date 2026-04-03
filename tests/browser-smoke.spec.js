@@ -4,6 +4,7 @@ const sampleEntitlement = {
   eventId: "evt-demo-1",
   eventType: "ENTITLEMENT_OFFER_ACCEPTED",
   status: "scheduled",
+  approvalStatus: "pending",
   receivedAt: "2026-04-03T00:00:00.000Z",
   isAutomaticApproval: true,
   entitlement: {
@@ -34,6 +35,7 @@ test("signup verified metadata is visible", async ({ page }) => {
   await expect(page.locator("#gcp-identity-view")).toContainText("demo-uid");
   await expect(page.locator("#gcp-offer-view")).toContainText("scheduled");
   await expect(page.locator("#gcp-approval-view")).toContainText("automatic");
+  await expect(page.locator("#gcp-approval-state-view")).toContainText("pending");
   await expect(page.locator("#gcp-start-view")).toContainText("2026-04-10");
   await expect(page.locator("#gcp-note")).toContainText(/scheduled/i);
 });
@@ -89,4 +91,25 @@ test("entitlement status page renders scheduled offers", async ({ page }) => {
   await expect(page.locator("#status-badge")).toContainText("scheduled");
   await expect(page.locator("#entitlement-id")).toContainText("demo-entitlement-support");
   await expect(page.locator("#start-time")).toContainText("2026-04-10");
+  await expect(page.getByRole("button", { name: /Approve Customer Account/i })).toBeVisible();
+  await expect(page.locator("#approval-status")).toContainText("pending");
+});
+
+test("entitlement status page renders rejected offers", async ({ page }) => {
+  await page.route(/.*\/\.netlify\/functions\/marketplace-entitlements.*/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...sampleEntitlement,
+        status: "rejected",
+        approvalStatus: "rejected",
+        approvalRejectedAt: "2026-04-03T00:00:00.000Z",
+      }),
+    });
+  });
+
+  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-rejected");
+  await expect(page.locator("#status-badge")).toContainText("rejected");
+  await expect(page.locator("#note")).toContainText(/automatically rejected/i);
+  await expect(page.getByRole("button", { name: /Approve Customer Account/i })).toHaveCount(0);
 });

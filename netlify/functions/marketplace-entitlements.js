@@ -1,4 +1,5 @@
 const { connectLambda, getStore } = require('@netlify/blobs');
+const { computeLifecycle, createEntitlementRecord } = require('./_shared/entitlement-lifecycle');
 
 const STORE_NAME = 'marketplace-entitlements';
 const jsonHeaders = {
@@ -44,57 +45,6 @@ function decodePubSubEnvelope(payload) {
   return payload?.message?.json || null;
 }
 
-function isoOrNull(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-function computeStatus(entitlement) {
-  const now = Date.now();
-  const start = isoOrNull(entitlement.newOfferStartTime);
-  const end = isoOrNull(entitlement.newOfferEndTime);
-  const startMs = start ? Date.parse(start) : NaN;
-  const endMs = end ? Date.parse(end) : NaN;
-
-  if (Number.isFinite(startMs) && now < startMs) {
-    return 'scheduled';
-  }
-
-  if (Number.isFinite(endMs) && now > endMs) {
-    return 'expired';
-  }
-
-  if (start || end) {
-    return 'active';
-  }
-
-  return 'accepted';
-}
-
-function normalizeEvent(payload) {
-  const entitlement = payload.entitlement || {};
-  const entitlementId = String(entitlement.id || payload.entitlementId || payload.id || '').trim();
-  const eventType = String(payload.eventType || 'ENTITLEMENT_OFFER_ACCEPTED').trim();
-  const normalized = {
-    eventId: String(payload.eventId || payload.messageId || '').trim() || null,
-    eventType,
-    entitlement: {
-      id: entitlementId,
-      updateTime: isoOrNull(entitlement.updateTime),
-      newPendingOfferDuration: entitlement.newPendingOfferDuration || null,
-      newOfferStartTime: isoOrNull(entitlement.newOfferStartTime),
-      newOfferEndTime: isoOrNull(entitlement.newOfferEndTime),
-    },
-    raw: payload,
-  };
-
-  normalized.status = computeStatus(normalized.entitlement);
-  normalized.receivedAt = new Date().toISOString();
-  normalized.isAutomaticApproval = eventType === 'ENTITLEMENT_OFFER_ACCEPTED';
-  return normalized;
-}
-
 async function loadStore(event) {
   connectLambda(event);
   return getStore(STORE_NAME);
@@ -113,6 +63,18 @@ exports.handler = async (event) => {
       return response(404, { error: 'not_found', key });
     }
 
+    const current = computeLifecycle(record);
+    if (JSON.stringify(current) !== JSON.stringify(record)) {
+      await store.setJSON(key, current);
+      if (key !== 'latest') {
+        const latestRecord = await store.get('latest', { type: 'json' });
+        if (latestRecord && latestRecord.entitlement && latestRecord.entitlement.id === current.entitlement.id) {
+          await store.setJSON('latest', current);
+        }
+      }
+      return response(200, current);
+    }
+
     return response(200, record);
   }
 
@@ -125,7 +87,7 @@ exports.handler = async (event) => {
     return response(400, { error: 'invalid_payload' });
   }
 
-  const record = normalizeEvent(payload);
+  const record = createEntitlementRecord(payload);
   if (!record.entitlement.id) {
     return response(400, { error: 'missing_entitlement_id' });
   }
@@ -138,6 +100,7 @@ exports.handler = async (event) => {
     ok: true,
     key,
     status: record.status,
+    approvalStatus: record.approvalStatus,
     entitlement: record.entitlement,
   });
 };
