@@ -8,6 +8,16 @@ test("signup page renders expected content", async ({ page }) => {
   await expect(page.locator("body")).not.toContainText("ג");
 });
 
+test("signup verified metadata is visible", async ({ page }) => {
+  await page.goto("/signup?verified=1&gcp_account_id=demo-account&gcp_user_identity=demo-uid&offer_state=accepted&approval_mode=automatic");
+  await expect(page.locator("#tok-ok")).toBeVisible();
+  await expect(page.locator("#gcp-meta")).toBeVisible();
+  await expect(page.locator("#gcp-account-view")).toContainText("demo-account");
+  await expect(page.locator("#gcp-identity-view")).toContainText("demo-uid");
+  await expect(page.locator("#gcp-offer-view")).toContainText("accepted");
+  await expect(page.locator("#gcp-approval-view")).toContainText("automatic");
+});
+
 test("login page renders expected content", async ({ page }) => {
   await page.goto("/login");
   await expect(page).toHaveTitle(/Sign In/);

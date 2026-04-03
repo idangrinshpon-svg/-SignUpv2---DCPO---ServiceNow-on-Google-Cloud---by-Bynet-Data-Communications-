@@ -94,6 +94,12 @@
     .tok-ok.show{display:flex}
     .tok-dot{width:7px;height:7px;border-radius:50%;background:#16a34a;flex-shrink:0;animation:pulse 1.8s infinite}
     .tok-ok span{font-size:12px;color:#166534;font-weight:500}
+    .gcp-meta{display:none;background:#f8fafc;border:1px solid var(--bd);border-radius:var(--rs);padding:14px;margin-bottom:18px}
+    .gcp-meta.show{display:block}
+    .gcp-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+    .gcp-meta-item{background:#fff;border:1px solid var(--bdl);border-radius:10px;padding:10px 12px}
+    .gcp-meta-item span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin-bottom:4px}
+    .gcp-meta-item strong{font-size:12px;color:var(--txt);word-break:break-word}
 
     /* Error banner */
     .err-bar{display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--rs);padding:10px 14px;margin-bottom:20px}
@@ -226,6 +232,27 @@
         <span>Google Cloud identity verified — complete your registration below</span>
       </div>
 
+      <div class="gcp-meta" id="gcp-meta">
+        <div class="gcp-meta-grid">
+          <div class="gcp-meta-item">
+            <span>Account Resource</span>
+            <strong id="gcp-account-view">Not loaded</strong>
+          </div>
+          <div class="gcp-meta-item">
+            <span>User Identity</span>
+            <strong id="gcp-identity-view">Not loaded</strong>
+          </div>
+          <div class="gcp-meta-item">
+            <span>Offer State</span>
+            <strong id="gcp-offer-view">Not loaded</strong>
+          </div>
+          <div class="gcp-meta-item">
+            <span>Approval Mode</span>
+            <strong id="gcp-approval-view">Not loaded</strong>
+          </div>
+        </div>
+      </div>
+
       <!-- Error banner -->
       <div class="err-bar" id="err-bar">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="7" fill="#ef4444"/><path d="M7 4v3.5M7 9.5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -319,6 +346,10 @@
     }catch(e){return null;}
   }
 
+  function setText(id, value, fallback){
+    document.getElementById(id).textContent = value || fallback;
+  }
+
   function showError(msg){
     var bar=document.getElementById('err-bar');
     document.getElementById('err-msg').textContent=msg||'An error occurred. Please contact servicenow@bynet.co.il';
@@ -328,6 +359,11 @@
   function initGcp(){
     var params=new URLSearchParams(window.location.search);
     var token=params.get('x-gcp-marketplace-token')||params.get('token')||(params.get('demo')==='1'?'DEMO.eyJzdWIiOiJkZW1vLWFjY291bnQiLCJnb29nbGUiOnsidXNlcl9pZGVudGl0eSI6ImRlbW8tdWlkIiwicm9sZXMiOlsiYWNjb3VudF9hZG1pbiJdfSwiZXhwIjo5OTk5OTk5OTk5fQ.sig':null);
+    var verified = params.get('verified') === '1';
+    var account = params.get('gcp_account_id') || '';
+    var identity = params.get('gcp_user_identity') || '';
+    var offerState = params.get('offer_state') || 'Pending';
+    var approvalMode = params.get('approval_mode') || 'Pending';
 
     var err=params.get('error');
     if(err){
@@ -336,23 +372,34 @@
       return;
     }
 
-    if(!token) return;
+    if(!token && !verified) return;
 
     // Show verified banner
     document.getElementById('tok-ok').classList.add('show');
 
-    // Populate hidden fields
-    document.getElementById('gcp-token').value=token;
+    // Populate hidden fields and surfaced marketplace metadata
+    document.getElementById('gcp-token').value=token||'';
 
-    if(token!=='DEMO.eyJzdWIiOiJkZW1vLWFjY291bnQiLCJnb29nbGUiOnsidXNlcl9pZGVudGl0eSI6ImRlbW8tdWlkIiwicm9sZXMiOlsiYWNjb3VudF9hZG1pbiJdfSwiZXhwIjo5OTk5OTk5OTk5fQ.sig'){
+    if(token && token!=='DEMO.eyJzdWIiOiJkZW1vLWFjY291bnQiLCJnb29nbGUiOnsidXNlcl9pZGVudGl0eSI6ImRlbW8tdWlkIiwicm9sZXMiOlsiYWNjb3VudF9hZG1pbiJdfSwiZXhwIjo5OTk5OTk5OTk5fQ.sig'){
       var p=parseJwt(token);
       if(p){
-        document.getElementById('gcp-account').value=p.sub||'';
-        document.getElementById('gcp-identity').value=(p.google&&p.google.user_identity)||'';
+        account = account || p.sub || '';
+        identity = identity || ((p.google&&p.google.user_identity)||'');
       }
-    } else {
-      document.getElementById('gcp-account').value='demo-account';
-      document.getElementById('gcp-identity').value='demo-uid';
+    } else if(token){
+      account = account || 'demo-account';
+      identity = identity || 'demo-uid';
+    }
+
+    document.getElementById('gcp-account').value=account;
+    document.getElementById('gcp-identity').value=identity;
+
+    if(account || identity || verified){
+      document.getElementById('gcp-meta').classList.add('show');
+      setText('gcp-account-view', account, 'Not available');
+      setText('gcp-identity-view', identity, 'Not available');
+      setText('gcp-offer-view', offerState, 'Not available');
+      setText('gcp-approval-view', approvalMode, 'Not available');
     }
   }
 
@@ -382,7 +429,7 @@
     var payload={};
     data.forEach(function(v,k){payload[k]=v;});
 
-    // ── POST to your backend endpoint, which then calls the Partner Procurement API
+    // POST to your backend endpoint, which then calls the Partner Procurement API
     // fetch('/api/marketplace/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     //   .then(function(r){return r.json();})
     //   .then(showSuccess)

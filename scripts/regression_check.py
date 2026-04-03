@@ -100,7 +100,13 @@ def expect_ok_or_trailing_slash_redirect(
 
 def make_expired_jwt() -> str:
     header = {"alg": "none", "typ": "JWT"}
-    payload = {"exp": 1}
+    payload = {
+        "aud": "dcpo-servicenow-gcp-bynet.netlify.app",
+        "exp": 1,
+        "google": {"user_identity": "demo-uid"},
+        "iss": "https://www.googleapis.com/robot/v1/metadata/x509/cloud-commerce-partner@system.gserviceaccount.com",
+        "sub": "demo-account",
+    }
 
     # Build true base64url payloads without needing external deps.
     import base64
@@ -194,7 +200,7 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     signup_expired = request(
         "POST",
         f"{base_url}/signup",
-        form_data={"x-gcp-marketplace-token": expired},
+        form_data={"demo": "1", "x-gcp-marketplace-token": expired},
     )
     expect(
         signup_expired.status == 303 and signup_expired.headers.get("Location") == "/signup.html?error=token_expired",
@@ -206,7 +212,7 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     login_expired = request(
         "POST",
         f"{base_url}/login",
-        form_data={"x-gcp-marketplace-token": expired},
+        form_data={"demo": "1", "x-gcp-marketplace-token": expired},
     )
     expect(
         login_expired.status == 303 and login_expired.headers.get("Location") == "/login.html?error=token_expired",
