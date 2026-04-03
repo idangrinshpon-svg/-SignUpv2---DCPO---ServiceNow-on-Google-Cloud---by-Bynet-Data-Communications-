@@ -6,7 +6,10 @@
     "regression:live": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1",
     "regression:browser": "playwright test",
     "regression:all": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1 && playwright test",
-    "test": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1 && playwright test"
+    "test": "powershell -ExecutionPolicy Bypass -File .\\run-regression.ps1 && playwright test",
+    "qa:full": "powershell -ExecutionPolicy Bypass -File .\\run-qa.ps1",
+    "simulate:signup": "node .\\scripts\\signup_service_simulator.js",
+    "simulate:marketplace": "node .\\scripts\\google_marketplace_simulation.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"

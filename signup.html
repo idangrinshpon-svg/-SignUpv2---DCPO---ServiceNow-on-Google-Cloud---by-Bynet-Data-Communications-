@@ -272,6 +272,7 @@
       <div class="gcp-note" id="gcp-note"></div>
       <div class="gcp-actions" id="gcp-actions">
         <a class="gcp-link" id="gcp-status-link" href="/entitlement-status/">View Entitlement Status</a>
+        <a class="gcp-link" id="gcp-dashboard-link" href="/approval-dashboard/">Open Approval Dashboard</a>
       </div>
 
       <!-- Error banner -->
@@ -338,6 +339,8 @@
     </div>
     <div class="card-ft">
       <p>Already have an account? <a href="/login">Sign in here →</a></p>
+      <p style="margin-top:6px">Need to replay the signup contract? <a href="/signup-simulator/">Open the signup simulator</a></p>
+      <p style="margin-top:6px">Read the <a href="/docs/user-guide/">user manual</a> or the <a href="/docs/admin-guide/">admin manual</a>.</p>
       <div class="sec-badges">
         <div class="sb"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.5 6.3 6 7 3.5-.7 6-3.7 6-7V4L8 1Z"/></svg>Enterprise Security</div>
         <div class="sb"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm4 9H9v3H7V9H4V7h3V4h2v3h3v2Z"/></svg>GDPR Compliant</div>
@@ -350,6 +353,7 @@
 <footer class="pgfoot">
   <div class="pgfoot-l">&copy; 2025 Bynet Data Communications Ltd. · ServiceNow on Google Cloud Marketplace</div>
   <div class="pgfoot-r">
+    <a href="/docs/">Docs</a>
     <a href="/privacy">Privacy Policy</a>
     <a href="/terms">Terms</a>
     <a href="/contact">Contact Sales</a>
@@ -392,6 +396,7 @@
         : 'The entitlement has been accepted. If the offer is active, continue with normal provisioning and access setup.';
     var statusLink = document.getElementById('gcp-status-link');
     statusLink.href = '/entitlement-status/?account_id=' + encodeURIComponent(document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
+    document.getElementById('gcp-dashboard-link').href = '/approval-dashboard/?account_id=' + encodeURIComponent(document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
     document.getElementById('gcp-actions').classList.add('show');
   }
 
@@ -447,6 +452,7 @@
       setText('gcp-approval-view', approvalMode, 'Not available');
       setText('gcp-approval-state-view', params.get('approval_status') || 'pending', 'Not available');
       document.getElementById('gcp-status-link').href = '/entitlement-status/?account_id=' + encodeURIComponent(account || document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
+      document.getElementById('gcp-dashboard-link').href = '/approval-dashboard/?account_id=' + encodeURIComponent(account || document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
       document.getElementById('gcp-actions').classList.add('show');
     }
 

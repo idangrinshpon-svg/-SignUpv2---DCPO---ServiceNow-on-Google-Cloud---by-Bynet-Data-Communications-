@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Manual | DCPO ServiceNow on Google Cloud</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #10202b;
+      --muted: #5b6c7c;
+      --line: #dbe3ea;
+      --blue: #1a73e8;
+      --green: #0a3622;
+      --shadow: 0 14px 40px rgba(0,0,0,.06);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--text); background: linear-gradient(180deg, #fdfefe 0%, var(--bg) 100%); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 20px 60px; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .nav a { color: var(--blue); text-decoration: none; font-size: 13px; }
+    .hero, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    .hero { padding: 28px; margin-bottom: 18px; }
+    .eyebrow { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+    h1 { margin: 0 0 10px; font-size: clamp(28px, 4vw, 42px); line-height: 1.08; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.7; max-width: 820px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 840px) { .grid { grid-template-columns: 1fr; } }
+    .card { padding: 20px; }
+    .card h2 { margin: 0 0 8px; font-size: 18px; color: var(--green); }
+    .card p, .card li { color: var(--muted); line-height: 1.65; }
+    .card ul { margin: 10px 0 0 20px; }
+    .refs { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: #fff;
+    }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #0d5dbf); color: #fff; border-color: #bcd3f7; }
+    .section { margin-top: 18px; }
+    .section h2 { margin: 0 0 10px; font-size: 20px; }
+    .steps { display: grid; gap: 12px; }
+    .step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    .step strong { display: block; margin-bottom: 6px; }
+    .foot { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    code { background: #eef2f7; padding: 2px 5px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/docs/">Docs</a>
+      <a href="/signup">Signup</a>
+      <a href="/login">Login</a>
+      <a href="/entitlement-status/">Entitlement Status</a>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">User Manual</div>
+      <h1>How customers sign up, sign in, and check offer status</h1>
+      <p>This guide is for customers using the Bynet ServiceNow on Google Cloud experience. Use it when you are following the Marketplace signup or login flow, or when you need to check whether a private offer is scheduled, active, approved, or rejected.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Signup flow</h2>
+        <p>Use the signup page when Google Cloud Marketplace sends you into the registration flow.</p>
+        <ul>
+          <li>Open <a href="/signup">Signup</a> from the site.</li>
+          <li>If Google verification is present, the page shows your Marketplace identity details.</li>
+          <li>Complete the form with your company and contact information.</li>
+          <li>If your offer is automatic approval, the page shows the scheduled start time and account state.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Login flow</h2>
+        <p>Use the login page when you already have a ServiceNow instance and need to continue into your tenant.</p>
+        <ul>
+          <li>Open <a href="/login">Login</a>.</li>
+          <li>Enter the exact ServiceNow instance subdomain, such as <code>acme</code>.</li>
+          <li>Do not enter only the company name unless that is your actual tenant hostname.</li>
+          <li>If you are unsure, open <a href="/instance-help">Instance Help</a>.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>What the status pages mean</h2>
+      <div class="steps">
+        <div class="step"><strong>Scheduled</strong> The offer was accepted, but it starts in the future. For automatic offers, customer account approval must still happen before the start time.</div>
+        <div class="step"><strong>Pending</strong> A manual entitlement or plan-change request is waiting for an admin to approve it.</div>
+        <div class="step"><strong>Approved</strong> The approval step is complete. The record can move forward in the Marketplace lifecycle.</div>
+        <div class="step"><strong>Rejected</strong> The request was not approved in time or was explicitly rejected by the approver.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Helpful pages</h2>
+      <div class="refs">
+        <a class="btn primary" href="/entitlement-status/">Check entitlement status</a>
+        <a class="btn" href="/approval-dashboard/">Open approval dashboard</a>
+        <a class="btn" href="/marketplace">Marketplace guide</a>
+        <a class="btn" href="/contact">Contact support</a>
+      </div>
+    </section>
+
+    <div class="foot">If you received a Marketplace message that looks wrong, take a screenshot of the status page and send it to support with the entitlement ID and account ID.</div>
+  </div>
+</body>
+</html>
+

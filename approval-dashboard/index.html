@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approval Dashboard | DCPO ServiceNow on Google Cloud</title>
+  <style>
+    :root { --bg:#08111d; --text:#e6eefb; --muted:#98a8c6; --line:rgba(152,168,198,.16); --blue:#58a6ff; --blue-deep:#1f6feb; --green:#40c28a; --amber:#f0b84b; --red:#ff6b6b; --shadow:0 28px 80px rgba(0,0,0,.36); --radius:20px; }
+    * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+    body { margin:0; min-height:100vh; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(88,166,255,.14), transparent 24%), radial-gradient(circle at top right, rgba(64,194,138,.12), transparent 24%), linear-gradient(180deg, #050a12 0%, #08111d 50%, #0b1424 100%); }
+    a { color:inherit; }
+    .wrap { max-width:1440px; margin:0 auto; padding:28px 20px 56px; }
+    .nav { display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:20px; font-size:13px; color:var(--muted); }
+    .nav a { text-decoration:none; padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:rgba(255,255,255,.03); }
+    .hero { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(310px,.9fr); gap:18px; align-items:stretch; margin-bottom:18px; }
+    @media (max-width:1040px){ .hero { grid-template-columns:1fr; } }
+    .hero-main, .hero-side, .panel { border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; background:linear-gradient(180deg, rgba(16,24,41,.92), rgba(7,12,21,.92)); }
+    .hero-main { padding:28px 28px 24px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; margin-bottom:14px; border-radius:999px; background:rgba(88,166,255,.12); color:#cfe2ff; border:1px solid rgba(88,166,255,.18); text-transform:uppercase; letter-spacing:.1em; font-size:11px; font-weight:700; }
+    h1 { margin:0 0 12px; font-size:clamp(30px,4vw,50px); line-height:1.05; letter-spacing:-.04em; }
+    .hero-main p { margin:0; color:var(--muted); max-width:880px; line-height:1.65; font-size:15px; }
+    .hero-side { padding:22px; display:grid; gap:14px; }
+    .stat-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+    .stat { border:1px solid var(--line); border-radius:16px; padding:14px; background:rgba(255,255,255,.03); }
+    .stat span { display:block; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:7px; font-weight:700; }
+    .stat strong { display:block; font-size:28px; letter-spacing:-.03em; }
+    .subtle { color:var(--muted); line-height:1.6; font-size:13px; }
+    .toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:12px; margin-bottom:18px; align-items:end; }
+    @media (max-width:880px){ .toolbar { grid-template-columns:1fr; } }
+    .field label { display:block; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:#c3d2ee; margin-bottom:6px; font-weight:700; }
+    .field input { width:100%; border:1px solid rgba(152,168,198,.22); border-radius:14px; background:rgba(255,255,255,.04); color:var(--text); padding:13px 14px; font:inherit; outline:none; }
+    .field input:focus { border-color:rgba(88,166,255,.7); box-shadow:0 0 0 3px rgba(88,166,255,.12); }
+    .btn { border:0; border-radius:14px; padding:13px 16px; font:inherit; font-weight:700; color:#fff; cursor:pointer; transition:transform .15s ease, opacity .15s ease; }
+    .btn:hover { transform:translateY(-1px); } .btn.primary { background:linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%); } .btn.secondary { background:rgba(255,255,255,.08); border:1px solid var(--line); }
+    .grid { display:grid; grid-template-columns:1.2fr .8fr; gap:18px; }
+    @media (max-width:1120px){ .grid { grid-template-columns:1fr; } }
+    .panel { padding:0; background:linear-gradient(180deg, rgba(13,21,37,.96), rgba(8,13,23,.96)); }
+    .panel-hd { padding:18px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .panel-hd h2 { margin:0 0 5px; font-size:18px; } .panel-hd p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .panel-bd { padding:18px 20px 20px; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    @media (max-width:1120px){ .summary-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } } @media (max-width:640px){ .summary-grid { grid-template-columns:1fr; } }
+    .summary-card { border:1px solid var(--line); border-radius:16px; padding:16px; background:rgba(255,255,255,.03); min-height:144px; }
+    .summary-card .kicker { display:inline-flex; align-items:center; gap:6px; margin-bottom:10px; font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:#c6d5f2; font-weight:700; }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; border:1px solid transparent; margin-bottom:10px; }
+    .badge.ok { background:rgba(64,194,138,.16); color:#bdf3da; border-color:rgba(64,194,138,.24); } .badge.warn { background:rgba(240,184,75,.16); color:#f8dfab; border-color:rgba(240,184,75,.24); } .badge.bad { background:rgba(255,107,107,.16); color:#ffc0c0; border-color:rgba(255,107,107,.24); } .badge.neutral { background:rgba(88,166,255,.12); color:#cfe2ff; border-color:rgba(88,166,255,.18); }
+    .summary-card h3 { margin:0 0 8px; font-size:16px; line-height:1.25; } .summary-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+    .card-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; } @media (max-width:960px){ .card-grid { grid-template-columns:1fr; } }
+    .state-card { border:1px solid var(--line); border-radius:18px; padding:18px; background:rgba(255,255,255,.03); }
+    .state-card h3 { margin:0 0 8px; font-size:17px; line-height:1.25; } .state-card .summary { color:var(--muted); line-height:1.6; font-size:13px; margin-bottom:14px; min-height:42px; }
+    .kv-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; } @media (max-width:640px){ .kv-grid { grid-template-columns:1fr; } }
+    .kv { border:1px solid rgba(152,168,198,.14); border-radius:14px; background:rgba(7,12,21,.54); padding:12px; min-height:74px; }
+    .kv span { display:block; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; font-weight:700; } .kv strong { display:block; font-size:13px; line-height:1.45; word-break:break-word; }
+    .panel-side { display:grid; gap:18px; }
+    .table { width:100%; border-collapse:collapse; font-size:13px; } .table th, .table td { text-align:left; padding:12px 10px; border-bottom:1px solid var(--line); vertical-align:top; } .table th { color:#c6d5f2; font-size:11px; text-transform:uppercase; letter-spacing:.09em; } .table td { color:var(--text); } .table td.muted { color:var(--muted); }
+    .pill-row { display:flex; flex-wrap:wrap; gap:8px; } .pill { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+    .empty { border:1px dashed rgba(152,168,198,.24); border-radius:18px; padding:18px; color:var(--muted); line-height:1.6; background:rgba(255,255,255,.02); }
+    .footer { margin-top:16px; color:var(--muted); font-size:12px; line-height:1.6; }
+    .loading { opacity:.7; filter:saturate(.85); }
+    .row-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .mini-btn { border:1px solid var(--line); background:rgba(255,255,255,.06); color:#fff; border-radius:12px; padding:10px 12px; font:inherit; font-weight:700; cursor:pointer; }
+    .mini-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .pending-list { display:grid; gap:12px; }
+    .pending-item { border:1px solid var(--line); border-radius:16px; padding:16px; background:rgba(255,255,255,.03); }
+    .pending-item h4 { margin:0 0 6px; font-size:15px; }
+    .pending-item p { margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+    .pending-meta { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-top:12px; }
+    @media (max-width:640px){ .pending-meta { grid-template-columns:1fr; } }
+    .pending-meta div { border:1px solid rgba(152,168,198,.14); border-radius:12px; background:rgba(7,12,21,.54); padding:10px 12px; }
+    .pending-meta span { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:4px; font-weight:700; }
+    .pending-meta strong { display:block; font-size:13px; }
+    .approve-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid rgba(88,166,255,.18); background:rgba(88,166,255,.12); color:#cfe2ff; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+    .error { color:#ffc0c0; font-size:13px; margin-top:8px; display:none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a><a href="/signup">Signup</a><a href="/login">Login</a><a href="/entitlement-status">Entitlement Status</a><a href="/docs/">Docs</a><a href="/signup-simulator">Signup Simulator</a><a href="/contact">Contact</a>
+    </div>
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">Approval Operations</div>
+        <h1>Automatic and Manual Approval Status in one dashboard</h1>
+        <p>This page aggregates the Marketplace approval lifecycle so you can review automatic offer approval, manual entitlement approval, plan-change approval, and customer account approval without jumping between pages.</p>
+      </div>
+      <div class="hero-side">
+        <div class="stat-grid">
+          <div class="stat"><span>Entitlements</span><strong id="count-entitlements">0</strong></div>
+          <div class="stat"><span>Automatic</span><strong id="count-automatic">0</strong></div>
+          <div class="stat"><span>Manual</span><strong id="count-manual">0</strong></div>
+          <div class="stat"><span>Accounts</span><strong id="count-accounts">0</strong></div>
+        </div>
+        <div class="subtle" id="dashboard-summary">Loading the latest approval records from the backend store.</div>
+      </div>
+    </section>
+    <section class="toolbar">
+      <div class="field"><label for="entitlement-id">Entitlement ID</label><input id="entitlement-id" placeholder="Optional: focus a specific entitlement" /></div>
+      <div class="field"><label for="account-id">Account ID</label><input id="account-id" placeholder="Optional: focus a specific account" /></div>
+      <button class="btn primary" id="load-btn" type="button">Load Dashboard</button>
+      <button class="btn secondary" id="refresh-btn" type="button">Refresh Latest</button>
+    </section>
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-hd">
+          <div><h2>Approval State Overview</h2><p>Current status for each approval track with the most recent live record.</p></div>
+          <div class="pill-row"><span class="pill" id="data-source">Live backend store</span><span class="pill" id="generated-at">Waiting for data</span></div>
+        </div>
+        <div class="panel-bd">
+          <div class="summary-grid">
+            <div class="summary-card"><div class="kicker">Automatic Approval</div><div class="badge neutral" id="badge-automatic">Loading</div><h3 id="title-automatic">Waiting for data</h3><p id="copy-automatic">The latest automatic offer approval will appear here.</p></div>
+            <div class="summary-card"><div class="kicker">Manual Entitlement</div><div class="badge neutral" id="badge-manual">Loading</div><h3 id="title-manual">Waiting for data</h3><p id="copy-manual">The latest manual entitlement request will appear here.</p></div>
+            <div class="summary-card"><div class="kicker">Plan Change</div><div class="badge neutral" id="badge-plan">Loading</div><h3 id="title-plan">Waiting for data</h3><p id="copy-plan">The latest plan-change approval request will appear here.</p></div>
+            <div class="summary-card"><div class="kicker">Customer Account</div><div class="badge neutral" id="badge-account">Loading</div><h3 id="title-account">Waiting for data</h3><p id="copy-account">The latest customer account approval will appear here.</p></div>
+          </div>
+          <div class="card-grid">
+            <article class="state-card"><h3>Automatic Approval Request</h3><div class="summary" id="auto-summary">No automatic offer recorded yet.</div><div class="kv-grid"><div class="kv"><span>Entitlement</span><strong id="auto-entitlement">Not loaded</strong></div><div class="kv"><span>Status</span><strong id="auto-status">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="auto-approval">Not loaded</strong></div><div class="kv"><span>Start Time</span><strong id="auto-start">Not loaded</strong></div><div class="kv"><span>End Time</span><strong id="auto-end">Not loaded</strong></div><div class="kv"><span>Due At</span><strong id="auto-due">Not loaded</strong></div></div></article>
+            <article class="state-card"><h3>Manual Entitlement Request</h3><div class="summary" id="manual-summary">No manual entitlement request recorded yet.</div><div class="kv-grid"><div class="kv"><span>Entitlement</span><strong id="manual-entitlement">Not loaded</strong></div><div class="kv"><span>Status</span><strong id="manual-status">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="manual-approval">Not loaded</strong></div><div class="kv"><span>Received</span><strong id="manual-received">Not loaded</strong></div></div></article>
+            <article class="state-card"><h3>Plan Change Request</h3><div class="summary" id="plan-summary">No pending plan change recorded yet.</div><div class="kv-grid"><div class="kv"><span>Entitlement</span><strong id="plan-entitlement">Not loaded</strong></div><div class="kv"><span>Status</span><strong id="plan-status">Not loaded</strong></div><div class="kv"><span>Pending Plan</span><strong id="plan-pending">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="plan-approval">Not loaded</strong></div></div></article>
+            <article class="state-card"><h3>Customer Account Approval</h3><div class="summary" id="account-summary">No customer account approval recorded yet.</div><div class="kv-grid"><div class="kv"><span>Account</span><strong id="account-record">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="account-approval">Not loaded</strong></div><div class="kv"><span>Approved At</span><strong id="account-approved-at">Not loaded</strong></div><div class="kv"><span>Entitlement</span><strong id="account-entitlement">Not loaded</strong></div></div></article>
+          </div>
+        </div>
+      </section>
+      <section class="panel panel-side">
+        <div class="panel-hd"><div><h2>Focused View</h2><p>Details for the entitlement and account you requested, if they exist.</p></div></div>
+        <div class="panel-bd">
+          <div class="state-card" style="margin-bottom:14px;"><h3>Focused Entitlement</h3><div class="summary" id="focus-entitlement-summary">No entitlement selected.</div><div class="kv-grid"><div class="kv"><span>ID</span><strong id="focus-entitlement-id">Not loaded</strong></div><div class="kv"><span>Type</span><strong id="focus-entitlement-type">Not loaded</strong></div><div class="kv"><span>Status</span><strong id="focus-entitlement-status">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="focus-entitlement-approval">Not loaded</strong></div></div></div>
+          <div class="state-card" style="margin-bottom:14px;"><h3>Focused Account</h3><div class="summary" id="focus-account-summary">No account selected.</div><div class="kv-grid"><div class="kv"><span>Account</span><strong id="focus-account-id">Not loaded</strong></div><div class="kv"><span>Approval</span><strong id="focus-account-approval">Not loaded</strong></div><div class="kv"><span>Approved At</span><strong id="focus-account-approved-at">Not loaded</strong></div><div class="kv"><span>Entitlement</span><strong id="focus-account-entitlement">Not loaded</strong></div></div></div>
+          <div class="state-card" style="margin-bottom:14px;">
+            <h3>Waiting for Approval</h3>
+            <div class="summary">These records are pending manual approval. You can approve them directly from this dashboard.</div>
+            <div class="pending-list" id="pending-list"></div>
+            <div class="empty" id="pending-empty" style="display:none;">No manual approvals are waiting right now.</div>
+          </div>
+          <div class="state-card"><h3>Recent Activity</h3><div class="empty" id="recent-empty">Waiting for approval records.</div><div id="recent-wrap" style="display:none;"><table class="table" aria-label="Recent approval activity"><thead><tr><th>Track</th><th>Identifier</th><th>Status</th><th>When</th></tr></thead><tbody id="recent-body"></tbody></table></div></div>
+          <div class="footer" id="dashboard-note">Automatic offers show the scheduled activation window. Manual entitlement and plan-change requests remain pending until approved.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var endpoint = '/.netlify/functions/approval-dashboard-data';
+      var autoRefreshTimer = null;
+      var pendingState = { manualEntitlements: [], planChanges: [] };
+      var lastData = null;
+
+      function paramsFromInputs(){ var params=new URLSearchParams(); var entitlementId=document.getElementById('entitlement-id').value.trim(); var accountId=document.getElementById('account-id').value.trim(); if(entitlementId) params.set('entitlement_id', entitlementId); if(accountId) params.set('account_id', accountId); return params; }
+      function badgeClass(status){ var value=String(status||'').toLowerCase(); if(value==='approved'||value==='active') return 'ok'; if(value==='rejected'||value==='expired') return 'bad'; if(value==='scheduled'||value==='pending') return 'warn'; return 'neutral'; }
+      function setText(id,value,fallback){ document.getElementById(id).textContent=value||fallback; }
+      function setBadge(id,status){ var el=document.getElementById(id); el.textContent=status||'not available'; el.className='badge '+badgeClass(status); }
+      function formatWhen(value){ return value||'Not loaded'; }
+      function formatEntitlementLabel(record){ if(!record||!record.id) return 'Not loaded'; return record.id + (record.accountId ? ' · ' + record.accountId : ''); }
+      function renderCard(prefix, record, emptyText){ if(!record){ setBadge('badge-'+prefix, 'missing'); setText('title-'+prefix, 'No '+emptyText.toLowerCase()); setText('copy-'+prefix, emptyText); return; } setBadge('badge-'+prefix, record.status || record.approvalStatus || 'unknown'); if(prefix==='automatic'){ setText('title-'+prefix, record.status==='scheduled' ? 'Automatic offer is scheduled' : 'Automatic offer is active'); setText('copy-'+prefix, record.summary); setText('auto-entitlement', formatEntitlementLabel(record)); setText('auto-status', record.status); setText('auto-approval', record.approvalStatus + (record.approvalRequired ? '' : ' · not required')); setText('auto-start', formatWhen(record.activationStartTime)); setText('auto-end', formatWhen(record.activationEndTime)); setText('auto-due', formatWhen(record.approvalDueAt)); } else if(prefix==='manual'){ setText('title-'+prefix, record.status==='pending' ? 'Manual entitlement is pending approval' : 'Manual entitlement request'); setText('copy-'+prefix, record.summary); setText('manual-entitlement', formatEntitlementLabel(record)); setText('manual-status', record.status); setText('manual-approval', record.approvalStatus); setText('manual-received', formatWhen(record.receivedAt)); } else if(prefix==='plan'){ setText('title-'+prefix, record.planChangeStatus==='pending' ? 'Plan change is waiting approval' : 'Plan change request'); setText('copy-'+prefix, record.summary); setText('plan-entitlement', formatEntitlementLabel(record)); setText('plan-status', record.status); setText('plan-pending', record.pendingPlanName || 'Not loaded'); setText('plan-approval', record.planChangeStatus); } else if(prefix==='account'){ setText('title-'+prefix, record.approvalStatus==='approved' ? 'Customer account approved' : 'Customer account approval pending'); setText('copy-'+prefix, record.summary); setText('account-record', record.accountId || 'Not loaded'); setText('account-approval', record.approvalStatus); setText('account-approved-at', formatWhen(record.approvedAt)); setText('account-entitlement', record.entitlementId || 'Not loaded'); } }
+      function renderFocusEntitlement(record){ if(!record){ setText('focus-entitlement-summary', 'No entitlement selected.'); setText('focus-entitlement-id', 'Not loaded'); setText('focus-entitlement-type', 'Not loaded'); setText('focus-entitlement-status', 'Not loaded'); setText('focus-entitlement-approval', 'Not loaded'); return; } setText('focus-entitlement-summary', record.summary); setText('focus-entitlement-id', formatEntitlementLabel(record)); setText('focus-entitlement-type', record.category || 'unknown'); setText('focus-entitlement-status', record.status || 'unknown'); setText('focus-entitlement-approval', record.approvalStatus || record.planChangeStatus || 'not loaded'); }
+      function renderFocusAccount(record){ if(!record){ setText('focus-account-summary', 'No account selected.'); setText('focus-account-id', 'Not loaded'); setText('focus-account-approval', 'Not loaded'); setText('focus-account-approved-at', 'Not loaded'); setText('focus-account-entitlement', 'Not loaded'); return; } setText('focus-account-summary', record.summary); setText('focus-account-id', record.accountId || 'Not loaded'); setText('focus-account-approval', record.approvalStatus || 'not loaded'); setText('focus-account-approved-at', formatWhen(record.approvedAt)); setText('focus-account-entitlement', record.entitlementId || 'Not loaded'); }
+      function escapeHtml(value){ return String(value==null ? '' : value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function renderRecent(data){ var rows=[]; (data.recent&&data.recent.entitlements?data.recent.entitlements:[]).forEach(function(item){ rows.push({track:item.category||'entitlement', identifier:item.id||'Not loaded', status:item.status||item.approvalStatus||'not loaded', when:item.receivedAt||item.activationStartTime||'Not loaded'}); }); (data.recent&&data.recent.accounts?data.recent.accounts:[]).forEach(function(item){ rows.push({track:'account', identifier:item.accountId||'Not loaded', status:item.approvalStatus||'not loaded', when:item.approvedAt||'Not loaded'}); }); rows.sort(function(a,b){ return String(b.when).localeCompare(String(a.when)); }); var tbody=document.getElementById('recent-body'); tbody.innerHTML=rows.map(function(row){ return '<tr><td class="muted">'+escapeHtml(row.track)+'</td><td>'+escapeHtml(row.identifier)+'</td><td>'+escapeHtml(row.status)+'</td><td class="muted">'+escapeHtml(row.when)+'</td></tr>'; }).join(''); var empty=document.getElementById('recent-empty'); var wrap=document.getElementById('recent-wrap'); if(rows.length){ empty.style.display='none'; wrap.style.display='block'; } else { empty.style.display='block'; wrap.style.display='none'; } }
+      function renderPendingItem(item, kind){ var endpointUrl = kind === 'plan' ? '/.netlify/functions/marketplace-plan-change-approval' : '/.netlify/functions/marketplace-entitlement-approval'; var label = kind === 'plan' ? 'Approve Plan Change' : 'Approve Entitlement'; var extra = kind === 'plan' ? (item.pendingPlanName || 'Pending plan change') : (item.pendingOfferName || 'Pending entitlement approval'); var summary = kind === 'plan' ? item.summary : item.summary; return '<div class="pending-item"><div class="approve-badge">Waiting for approval</div><h4>'+escapeHtml(item.id || 'Unknown entitlement')+'</h4><p>'+escapeHtml(summary || extra)+'</p><div class="pending-meta"><div><span>Type</span><strong>'+escapeHtml(kind === 'plan' ? 'Plan Change' : 'Manual Entitlement')+'</strong></div><div><span>Status</span><strong>'+escapeHtml(item.planChangeStatus || item.approvalStatus || 'pending')+'</strong></div><div><span>Pending Plan</span><strong>'+escapeHtml(item.pendingPlanName || 'Not loaded')+'</strong></div><div><span>Received</span><strong>'+escapeHtml(item.receivedAt || 'Not loaded')+'</strong></div></div><div class="row-actions"><button class="mini-btn" data-approve-kind="'+escapeHtml(kind)+'" data-entitlement-id="'+escapeHtml(item.id || '')+'" data-pending-plan="'+escapeHtml(item.pendingPlanName || '')+'">'+escapeHtml(label)+'</button></div><div class="error"></div></div>'; }
+      function renderPending(data){ pendingState.manualEntitlements = (data.pending&&data.pending.manualEntitlements) || []; pendingState.planChanges = (data.pending&&data.pending.planChanges) || []; var list = document.getElementById('pending-list'); var empty = document.getElementById('pending-empty'); var items = []; pendingState.manualEntitlements.forEach(function(item){ items.push(renderPendingItem(item, 'manual')); }); pendingState.planChanges.forEach(function(item){ items.push(renderPendingItem(item, 'plan')); }); list.innerHTML = items.join(''); empty.style.display = items.length ? 'none' : 'block'; list.style.display = items.length ? 'grid' : 'none'; list.querySelectorAll('button[data-approve-kind]').forEach(function(btn){ btn.addEventListener('click', approvePendingItem); }); }
+      function render(data){ lastData = data; document.body.classList.remove('loading'); setText('count-entitlements', String((data.counts&&data.counts.entitlements)||0)); setText('count-automatic', String((data.counts&&data.counts.automatic)||0)); setText('count-manual', String((data.counts&&data.counts.manualEntitlement)||0)); setText('count-accounts', String((data.counts&&data.counts.accounts)||0)); setText('generated-at', data.generatedAt ? 'Updated ' + data.generatedAt : 'Waiting for data'); setText('dashboard-summary', data.summary&&data.summary.automatic ? data.summary.automatic.summary : 'No automatic approval records have been stored yet.'); renderCard('automatic', data.summary&&data.summary.automatic, 'No automatic approval request recorded yet.'); renderCard('manual', data.summary&&data.summary.manualEntitlement, 'No manual entitlement request recorded yet.'); renderCard('plan', data.summary&&data.summary.planChange, 'No pending plan change recorded yet.'); renderCard('account', data.summary&&data.summary.accountApproval, 'No customer account approval recorded yet.'); renderFocusEntitlement(data.focused&&data.focused.entitlement); renderFocusAccount(data.focused&&data.focused.account); renderPending(data); renderRecent(data); }
+      async function loadDashboard(){ document.body.classList.add('loading'); var query=paramsFromInputs(); var url=endpoint + (query.toString() ? '?' + query.toString() : ''); setText('data-source', query.toString() ? 'Focused backend view' : 'Live backend store'); var response=await fetch(url, { headers:{ Accept:'application/json' } }); if(!response.ok) throw new Error('Unable to load approval data'); var data=await response.json(); render(data); }
+      async function approvePendingItem(event){ var btn = event.currentTarget; var kind = btn.getAttribute('data-approve-kind'); var entitlementId = btn.getAttribute('data-entitlement-id'); var pendingPlanName = btn.getAttribute('data-pending-plan'); var payload = kind === 'plan' ? { entitlement_id: entitlementId, pending_plan_name: pendingPlanName || '', approved_by: 'dashboard-admin' } : { entitlement_id: entitlementId, account_id: document.getElementById('account-id').value.trim() || 'demo-account', approved_by: 'dashboard-admin', approval_name: 'entitlement-approval' }; var url = kind === 'plan' ? '/.netlify/functions/marketplace-plan-change-approval' : '/.netlify/functions/marketplace-entitlement-approval'; btn.disabled = true; try { var response = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', Accept:'application/json' }, body: JSON.stringify(payload) }); if(!response.ok) throw new Error('Approval failed'); await response.json(); await loadDashboard(); } catch (error) { btn.disabled = false; var errorEl = btn.parentElement.parentElement.querySelector('.error'); if (errorEl) { errorEl.style.display = 'block'; errorEl.textContent = error.message || 'Approval failed'; } } }
+      document.getElementById('load-btn').addEventListener('click', function(){ loadDashboard().catch(function(){ document.body.classList.remove('loading'); setText('dashboard-summary', 'No approval records were returned by the backend.'); }); });
+      document.getElementById('refresh-btn').addEventListener('click', function(){ document.getElementById('entitlement-id').value=''; document.getElementById('account-id').value=''; loadDashboard().catch(function(){ document.body.classList.remove('loading'); setText('dashboard-summary', 'No approval records were returned by the backend.'); }); });
+      var params=new URLSearchParams(window.location.search); document.getElementById('entitlement-id').value=params.get('entitlement_id') || ''; document.getElementById('account-id').value=params.get('account_id') || ''; loadDashboard().catch(function(){ document.body.classList.remove('loading'); setText('dashboard-summary', 'Approval data is not available yet.'); setText('generated-at', 'No data'); setBadge('badge-automatic', 'missing'); setBadge('badge-manual', 'missing'); setBadge('badge-plan', 'missing'); setBadge('badge-account', 'missing'); });
+      autoRefreshTimer = window.setInterval(function(){ loadDashboard().catch(function(){}); }, 60000);
+      window.addEventListener('beforeunload', function(){ if(autoRefreshTimer){ window.clearInterval(autoRefreshTimer); } });
+    })();
+  </script>
+</body>
+</html>

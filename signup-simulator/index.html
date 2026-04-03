@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup Flow Simulator | DCPO ServiceNow on Google Cloud</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #101a2f;
+      --panel-2: #0f172a;
+      --text: #e5eefb;
+      --muted: #9fb1ce;
+      --line: #22304b;
+      --blue: #4ea1ff;
+      --green: #40c28a;
+      --yellow: #f0b84b;
+      --red: #ff6b6b;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(78, 161, 255, 0.12), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(64, 194, 138, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 20px 44px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 820px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(64, 194, 138, 0.12);
+      color: #bdf3da;
+      border: 1px solid rgba(64, 194, 138, 0.22);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1020px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(16, 26, 47, 0.98), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(159, 177, 206, 0.12);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-hd {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(159, 177, 206, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .panel-hd h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .panel-hd p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .panel-bd {
+      padding: 18px 20px 20px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #c9d6eb;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid rgba(159, 177, 206, 0.18);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(78, 161, 255, 0.7);
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.12);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { background: linear-gradient(135deg, #4ea1ff, #2c6cff); box-shadow: 0 10px 24px rgba(44,108,255,0.28); }
+    .btn.secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(159,177,206,0.14); }
+
+    .chiprow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(159,177,206,0.12);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .transcript {
+      display: grid;
+      gap: 12px;
+      min-height: 56px;
+    }
+
+    .entry {
+      border: 1px solid rgba(159,177,206,0.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+
+    .entry-hd {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(159,177,206,0.10);
+    }
+
+    .entry-hd strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .entry-hd span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .ok { background: rgba(64, 194, 138, 0.16); color: #bdf3da; }
+    .warn { background: rgba(240, 184, 75, 0.16); color: #f8dfab; }
+    .bad { background: rgba(255, 107, 107, 0.16); color: #ffc0c0; }
+
+    .entry-bd {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    @media (max-width: 840px) {
+      .entry-bd { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+    }
+
+    .box {
+      border: 1px solid rgba(159,177,206,0.12);
+      border-radius: 14px;
+      background: rgba(7, 12, 23, 0.56);
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .box h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #d7e4f9;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #d7e4f9;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .notes {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div>
+        <div class="badge">Signup Flow Simulator</div>
+        <h1>Replay Google requests and inspect the signup service responses</h1>
+        <p>
+          This page replays the documented Google Marketplace signup contract and shows the exact request and response
+          shape the service returns. It is designed to be a visual QA tool and a contract replay surface.
+        </p>
+      </div>
+      <div class="chiprow">
+        <div class="chip">Missing token</div>
+        <div class="chip">Demo success</div>
+        <div class="chip">Invalid token</div>
+        <div class="chip">Expired token</div>
+      </div>
+    </div>
+    <div class="chiprow" style="margin: 0 0 18px;">
+      <a class="chip" href="/signup" style="text-decoration:none;">Open Signup</a>
+      <a class="chip" href="/login" style="text-decoration:none;">Open Login</a>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-hd">
+          <h2>Simulator Controls</h2>
+          <p>Choose a request pattern, then run one case or the full matrix.</p>
+        </div>
+        <div class="panel-bd">
+          <div class="field">
+            <label for="baseUrl">Service Base URL</label>
+            <input id="baseUrl" value="https://dcpo-servicenow-gcp-bynet.netlify.app" />
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="mode">Execution Mode</label>
+              <select id="mode">
+                <option value="contract">Contract replay</option>
+                <option value="live">Live endpoint attempt</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="scenario">Scenario</label>
+              <select id="scenario">
+                <option value="missing-token">Missing token</option>
+                <option value="demo-success">Demo success</option>
+                <option value="signed-success">Signed success</option>
+                <option value="invalid-token">Invalid token</option>
+                <option value="expired-token">Expired token</option>
+                <option value="missing-identity">Missing Google identity</option>
+                <option value="invalid-audience">Invalid audience</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="tokenPreview">Generated Token / Body Preview</label>
+            <textarea id="tokenPreview" readonly></textarea>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="runOne">Run Selected Request</button>
+            <button class="btn secondary" id="runAll">Run Full Matrix</button>
+            <button class="btn secondary" id="clear">Clear Transcript</button>
+          </div>
+          <div class="notes">
+            Contract replay keeps the page useful offline. Live mode will attempt a real fetch if the service is accessible
+            from the current origin and the browser allows it.
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-hd">
+          <h2>Transcript</h2>
+          <p>Each entry shows the Google-shaped request and the service response or contract result.</p>
+        </div>
+        <div class="panel-bd">
+          <div id="transcript" class="transcript"></div>
+          <div class="footer">Responses are normalized to the signup service contract: redirects, errors, and verification metadata.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const baseUrlEl = document.getElementById("baseUrl");
+    const modeEl = document.getElementById("mode");
+    const scenarioEl = document.getElementById("scenario");
+    const tokenPreviewEl = document.getElementById("tokenPreview");
+    const transcriptEl = document.getElementById("transcript");
+
+    function base64UrlEncode(input) {
+      return btoa(unescape(encodeURIComponent(input)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+    }
+
+    function makeToken(payload, header = { alg: "none", typ: "JWT" }) {
+      return [
+        base64UrlEncode(JSON.stringify(header)),
+        base64UrlEncode(JSON.stringify(payload)),
+        "sig",
+      ].join(".");
+    }
+
+    function makePayload(overrides = {}) {
+      return {
+        aud: overrides.aud || "dcpo-servicenow-gcp-bynet.netlify.app",
+        exp: overrides.exp || Math.floor(Date.now() / 1000) + 3600,
+        google: overrides.google || {
+          user_identity: "demo-user-identity",
+          roles: ["roles/partner.viewer"],
+          orders: ["orders/demo-001"],
+        },
+        iss: overrides.iss || "https://www.googleapis.com/robot/v1/metadata/x509/cloud-commerce-partner@system.gserviceaccount.com",
+        sub: overrides.sub || "demo-account",
+      };
+    }
+
+    function scenarioConfig(name) {
+      switch (name) {
+        case "missing-token":
+          return { title: "Missing token", body: "demo=1", response: { status: 303, location: "/signup.html?error=missing_token", kind: "error" } };
+        case "demo-success":
+          return {
+            title: "Demo success",
+            body: `demo=1&x-gcp-marketplace-token=${encodeURIComponent(makeToken(makePayload()))}`,
+            response: {
+              status: 303,
+              location: "/signup.html?verified=1&gcp_account_id=demo-account&gcp_user_identity=demo-user-identity&gcp_roles=roles%2Fpartner.viewer&gcp_orders=orders%2Fdemo-001&approval_mode=automatic&approval_status=pending&offer_state=accepted&source=demo",
+              kind: "success",
+            },
+          };
+        case "signed-success":
+          return {
+            title: "Signed success",
+            body: `x-gcp-marketplace-token=${encodeURIComponent(makeToken(makePayload()))}`,
+            response: {
+              status: 303,
+              location: "/signup.html?verified=1&gcp_account_id=demo-account&gcp_user_identity=demo-user-identity&gcp_roles=roles%2Fpartner.viewer&gcp_orders=orders%2Fdemo-001&approval_mode=automatic&approval_status=pending&offer_state=accepted&source=gcp",
+              kind: "success",
+            },
+          };
+        case "invalid-token":
+          return {
+            title: "Invalid token",
+            body: "x-gcp-marketplace-token=not-a-jwt",
+            response: { status: 303, location: "/signup.html?error=invalid_token", kind: "error" },
+          };
+        case "expired-token":
+          return {
+            title: "Expired token",
+            body: `demo=1&x-gcp-marketplace-token=${encodeURIComponent(makeToken(makePayload({ exp: 1 })))}`,
+            response: { status: 303, location: "/signup.html?error=token_expired", kind: "error" },
+          };
+        case "missing-identity":
+          return {
+            title: "Missing Google identity",
+            body: `demo=1&x-gcp-marketplace-token=${encodeURIComponent(makeToken(makePayload({ google: {} })))} `,
+            response: { status: 303, location: "/signup.html?error=invalid_token", kind: "error" },
+          };
+        case "invalid-audience":
+          return {
+            title: "Invalid audience",
+            body: `demo=1&x-gcp-marketplace-token=${encodeURIComponent(makeToken(makePayload({ aud: "wrong.example.com" })))} `,
+            response: { status: 303, location: "/signup.html?error=invalid_token", kind: "error" },
+          };
+        default:
+          return scenarioConfig("missing-token");
+      }
+    }
+
+    function requestCard({ title, request, response, bodyPreview }) {
+      const statusClass = response.kind === "success" ? "ok" : response.status === 303 ? "warn" : "bad";
+      return `
+        <article class="entry">
+          <div class="entry-hd">
+            <div>
+              <strong>${title}</strong>
+              <span>${request}</span>
+            </div>
+            <div class="status ${statusClass}">${response.status}${response.location ? ` -> ${response.location}` : ""}</div>
+          </div>
+          <div class="entry-bd">
+            <div class="box">
+              <h3>Request Body</h3>
+              <pre>${escapeHtml(bodyPreview)}</pre>
+            </div>
+            <div class="box">
+              <h3>Response</h3>
+              <pre>${escapeHtml(JSON.stringify(response, null, 2))}</pre>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function updatePreview() {
+      const scenario = scenarioConfig(scenarioEl.value);
+      tokenPreviewEl.value = scenario.body;
+    }
+
+    async function runScenario(name) {
+      const mode = modeEl.value;
+      const baseUrl = baseUrlEl.value.replace(/\/+$/, "");
+      const scenario = scenarioConfig(name);
+
+      if (mode === "live") {
+        try {
+          const response = await fetch(`${baseUrl}/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: scenario.body,
+            redirect: "manual",
+          });
+          const liveBody = await response.text();
+          return {
+            title: scenario.title,
+            request: `POST ${baseUrl}/signup`,
+            response: {
+              status: response.status,
+              location: response.headers.get("location"),
+              kind: response.status >= 200 && response.status < 300 ? "success" : "warn",
+            },
+            bodyPreview: scenario.body,
+            liveBody,
+          };
+        } catch (error) {
+          return {
+            title: `${scenario.title} (contract replay fallback)`,
+            request: `POST ${baseUrl}/signup`,
+            response: {
+              ...scenario.response,
+              kind: "warn",
+              note: `Live fetch unavailable: ${error.message}`,
+            },
+            bodyPreview: scenario.body,
+          };
+        }
+      }
+
+      return {
+        title: scenario.title,
+        request: "POST /signup (contract replay)",
+        response: scenario.response,
+        bodyPreview: scenario.body,
+      };
+    }
+
+    async function appendScenario(name) {
+      const result = await runScenario(name);
+      transcriptEl.insertAdjacentHTML("afterbegin", requestCard(result));
+    }
+
+    async function runAll() {
+      transcriptEl.innerHTML = "";
+      const names = [
+        "missing-token",
+        "demo-success",
+        "signed-success",
+        "invalid-token",
+        "expired-token",
+        "missing-identity",
+        "invalid-audience",
+      ];
+      for (const name of names) {
+        const result = await runScenario(name);
+        transcriptEl.insertAdjacentHTML("beforeend", requestCard(result));
+      }
+    }
+
+    document.getElementById("runOne").addEventListener("click", async () => {
+      await appendScenario(scenarioEl.value);
+    });
+
+    document.getElementById("runAll").addEventListener("click", async () => {
+      await runAll();
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      transcriptEl.innerHTML = "";
+    });
+
+    scenarioEl.addEventListener("change", updatePreview);
+    updatePreview();
+  </script>
+</body>
+</html>

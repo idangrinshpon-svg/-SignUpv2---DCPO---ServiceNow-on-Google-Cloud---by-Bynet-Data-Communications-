@@ -317,6 +317,15 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     contact = request("GET", f"{base_url}/contact")
     expect_ok_or_trailing_slash_redirect(contact, "/contact", "GET /contact resolves correctly", failures)
 
+    docs = request("GET", f"{base_url}/docs/")
+    expect_ok_or_trailing_slash_redirect(docs, "/docs", "GET /docs resolves correctly", failures)
+
+    docs_user = request("GET", f"{base_url}/docs/user-guide/")
+    expect_ok_or_trailing_slash_redirect(docs_user, "/docs/user-guide", "GET /docs/user-guide resolves correctly", failures)
+
+    docs_admin = request("GET", f"{base_url}/docs/admin-guide/")
+    expect_ok_or_trailing_slash_redirect(docs_admin, "/docs/admin-guide", "GET /docs/admin-guide resolves correctly", failures)
+
     marketplace = request("GET", f"{base_url}/marketplace")
     expect_ok_or_trailing_slash_redirect(marketplace, "/marketplace", "GET /marketplace resolves correctly", failures)
 
@@ -326,11 +335,29 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     access_help = request("GET", f"{base_url}/access-help")
     expect_ok_or_trailing_slash_redirect(access_help, "/access-help", "GET /access-help resolves correctly", failures)
 
+    signup_simulator = request("GET", f"{base_url}/signup-simulator")
+    expect_ok_or_trailing_slash_redirect(signup_simulator, "/signup-simulator", "GET /signup-simulator resolves correctly", failures)
+
+    approval_dashboard = request("GET", f"{base_url}/approval-dashboard")
+    expect_ok_or_trailing_slash_redirect(approval_dashboard, "/approval-dashboard", "GET /approval-dashboard resolves correctly", failures)
+
     signup_links = LinkCollector()
     signup_links.feed(signup.body)
     expect(
         "login.html" in signup_links.hrefs or "/login" in signup_links.hrefs,
         "signup page keeps a path to sign in",
+        f"found links: {signup_links.hrefs!r}",
+        failures,
+    )
+    expect(
+        "/signup-simulator/" in signup_links.hrefs or "/signup-simulator" in signup_links.hrefs,
+        "signup page links to the signup simulator",
+        f"found links: {signup_links.hrefs!r}",
+        failures,
+    )
+    expect(
+        "/approval-dashboard/" in signup_links.hrefs or "/approval-dashboard" in signup_links.hrefs,
+        "signup page links to the approval dashboard",
         f"found links: {signup_links.hrefs!r}",
         failures,
     )
@@ -469,6 +496,12 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         "missing approval control markup",
         failures,
     )
+    expect(
+        "/approval-dashboard" in entitlement_page.body,
+        "entitlement status page links to the approval dashboard",
+        "missing approval dashboard link",
+        failures,
+    )
 
 
 def run_local_checks(failures: list[str]) -> None:
@@ -482,6 +515,8 @@ def run_local_checks(failures: list[str]) -> None:
             "require('./netlify/functions/marketplace-pubsub.js');"
             "require('./netlify/functions/marketplace-account-approval.js');"
             "require('./netlify/functions/marketplace-entitlement-approval.js');"
+            "require('./netlify/functions/marketplace-plan-change-approval.js');"
+            "require('./netlify/functions/approval-dashboard-data.js');"
             "require('./netlify/functions/marketplace-entitlements-reconcile.js');"
             "console.log('syntax_ok');"
         ),

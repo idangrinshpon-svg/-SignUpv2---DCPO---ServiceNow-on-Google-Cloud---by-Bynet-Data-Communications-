@@ -147,7 +147,9 @@
       <a href="/">Home</a>
       <a href="/signup">Signup</a>
       <a href="/login">Login</a>
+      <a href="/docs/">Docs</a>
       <a href="/access-help">Access Help</a>
+      <a href="/approval-dashboard">Approval Dashboard</a>
       <a href="/contact">Contact</a>
     </div>
 
@@ -221,6 +223,7 @@
         <div class="actions">
           <a class="btn primary" href="/contact">Contact Bynet</a>
           <button class="btn primary" id="approve-btn" type="button">Approve Customer Account</button>
+          <a class="btn" href="/approval-dashboard">Open Approval Dashboard</a>
           <a class="btn" href="/instance-help">Find Instance</a>
           <a class="btn" href="/login">Back to Login</a>
         </div>
@@ -238,6 +241,7 @@
       var accountId = params.get('account_id') || '';
       var endpoint = '/.netlify/functions/marketplace-entitlements' + (entitlementId ? '?entitlement_id=' + encodeURIComponent(entitlementId) : '?latest=1');
       var approvalEndpoint = '/.netlify/functions/marketplace-account-approval';
+      var approvalMode = 'account';
       var currentRecord = null;
 
       function setText(id, value, fallback) {
@@ -256,7 +260,25 @@
       function setApprovalButton(record) {
         var button = document.getElementById('approve-btn');
         var hasAccountId = !!(accountId || (record && record.accountId));
-        var canApprove = !!(record && hasAccountId && record.approvalStatus === 'pending' && record.status !== 'rejected');
+        var canApprove = false;
+        approvalEndpoint = '/.netlify/functions/marketplace-account-approval';
+        approvalMode = 'account';
+
+        if (record && record.planChangeStatus === 'pending') {
+          canApprove = !!record.entitlement && !!record.entitlement.id;
+          approvalEndpoint = '/.netlify/functions/marketplace-plan-change-approval';
+          approvalMode = 'plan-change';
+          button.textContent = 'Approve Plan Change';
+        } else if (record && record.eventType === 'ENTITLEMENT_CREATION_REQUESTED' && record.approvalStatus === 'pending') {
+          canApprove = !!record.entitlement && !!record.entitlement.id;
+          approvalEndpoint = '/.netlify/functions/marketplace-entitlement-approval';
+          approvalMode = 'entitlement';
+          button.textContent = 'Approve Entitlement';
+        } else {
+          canApprove = !!(record && hasAccountId && record.approvalStatus === 'pending' && record.status !== 'rejected');
+          button.textContent = 'Approve Customer Account';
+        }
+
         button.style.display = canApprove ? 'inline-flex' : 'none';
         button.disabled = !canApprove;
       }
@@ -269,11 +291,15 @@
         setStatus(record.status);
         setText('headline', record.status === 'scheduled'
           ? 'Offer is scheduled to start later'
+          : record.status === 'pending'
+            ? 'Offer is waiting for entitlement approval'
           : record.status === 'rejected'
             ? 'Offer was automatically rejected'
             : 'Offer status updated');
         setText('summary', record.status === 'scheduled'
           ? 'The Marketplace entitlement has been accepted, and the scheduled start time is in the future.'
+          : record.status === 'pending'
+            ? 'The Marketplace entitlement has been created and is waiting on entitlement approval before it can become active.'
           : record.status === 'rejected'
             ? 'The Marketplace entitlement missed the approval window and was automatically rejected.'
             : 'The Marketplace entitlement has been accepted and the activation window is available below.');
@@ -290,13 +316,19 @@
           ? (record.approvalStatus === 'approved'
             ? 'The customer account has been approved. The offer will become active at the scheduled start time.'
             : 'Automatic offer approval still requires account approval before the scheduled start date. If approval is not completed in time, the offer is automatically rejected.')
+          : record.status === 'pending'
+            ? 'This entitlement has been created and is waiting for manual approval.'
+          : record.planChangeStatus === 'pending'
+            ? 'This offer is active, but a plan change is waiting approval.'
+            : record.planChangeStatus === 'approved'
+              ? 'The plan change was approved and is waiting for Marketplace to apply it.'
           : record.status === 'rejected'
             ? 'The offer was automatically rejected because customer account approval was not completed before the scheduled start time.'
             : 'Once the offer is active, continue with the standard provisioning and customer access flow.';
         setApprovalButton(record);
       }
 
-      function approveAccount() {
+      function approveCurrent() {
         if (!currentRecord || !currentRecord.entitlement || !currentRecord.entitlement.id) {
           return;
         }
@@ -305,18 +337,30 @@
         button.disabled = true;
         button.textContent = 'Approving...';
 
+        var payload = {
+          entitlement_id: currentRecord.entitlement.id,
+          approved_by: 'customer-account',
+        };
+
+        if (approvalMode === 'account') {
+          payload.account_id = accountId || currentRecord.accountId || '';
+          payload.approval_name = 'account-approval';
+        } else if (approvalMode === 'entitlement') {
+          payload.account_id = accountId || currentRecord.accountId || '';
+          payload.approval_name = 'entitlement-approval';
+        } else if (approvalMode === 'plan-change') {
+          payload.pending_plan_name = currentRecord.pendingPlanName || currentRecord.entitlement.newPendingPlan || '';
+          payload.approved_by = 'plan-change-admin';
+          payload.reason = 'Approved through entitlement workflow';
+        }
+
         fetch(approvalEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-          body: JSON.stringify({
-            entitlement_id: currentRecord.entitlement.id,
-            account_id: accountId || currentRecord.accountId || '',
-            approval_name: 'account-approval',
-            approved_by: 'customer-account',
-          }),
+          body: JSON.stringify(payload),
         })
           .then(function (res) {
             if (!res.ok) {
@@ -327,7 +371,11 @@
           .then(render)
           .catch(function () {
             button.disabled = false;
-            button.textContent = 'Approve Customer Account';
+            button.textContent = approvalMode === 'plan-change'
+              ? 'Approve Plan Change'
+              : approvalMode === 'entitlement'
+                ? 'Approve Entitlement'
+                : 'Approve Customer Account';
           });
       }
 
@@ -348,7 +396,7 @@
           setApprovalButton(null);
         });
 
-      document.getElementById('approve-btn').addEventListener('click', approveAccount);
+      document.getElementById('approve-btn').addEventListener('click', approveCurrent);
     })();
   </script>
 </body>

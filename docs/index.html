@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation | DCPO ServiceNow on Google Cloud</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(13, 21, 37, 0.94);
+      --text: #e5eefb;
+      --muted: #9fb0ca;
+      --line: rgba(159, 176, 202, 0.16);
+      --blue: #58a6ff;
+      --green: #40c28a;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(88, 166, 255, 0.12), transparent 25%),
+        radial-gradient(circle at top right, rgba(64, 194, 138, 0.12), transparent 22%),
+        linear-gradient(180deg, #050a12 0%, #07111f 100%);
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .nav a {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      font-size: 13px;
+    }
+    .hero, .card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: 30px; margin-bottom: 18px; }
+    .hero .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #d8e7ff;
+      background: rgba(88, 166, 255, 0.12);
+      border: 1px solid rgba(88, 166, 255, 0.18);
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0 0 12px; font-size: clamp(30px, 5vw, 52px); line-height: 1.05; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.65; max-width: 900px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card { padding: 22px; }
+    .card h2 { margin: 0 0 8px; font-size: 20px; }
+    .card p { margin: 0 0 14px; color: var(--muted); line-height: 1.6; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1f6feb); border-color: rgba(88,166,255,.25); }
+    ul { margin: 12px 0 0 20px; color: var(--muted); line-height: 1.65; }
+    .footer { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/signup">Signup</a>
+      <a href="/login">Login</a>
+      <a href="/approval-dashboard/">Approval Dashboard</a>
+      <a href="/entitlement-status/">Entitlement Status</a>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">Documentation</div>
+      <h1>User and admin manuals for the DCPO ServiceNow flow</h1>
+      <p>This site is split into two manuals. The user manual covers signup, login, and what customers should do next. The admin manual covers approvals, dashboards, Marketplace event handling, and deployment operations.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>User Manual</h2>
+        <p>For end users who are signing up, signing in, or checking entitlement status.</p>
+        <div class="actions">
+          <a class="btn primary" href="/docs/user-guide/">Open user guide</a>
+          <a class="btn" href="/signup">Go to signup</a>
+        </div>
+        <ul>
+          <li>Signup flow and Google Cloud Marketplace verification</li>
+          <li>Login flow and ServiceNow instance guidance</li>
+          <li>Status pages for scheduled, approved, and rejected offers</li>
+          <li>Common troubleshooting paths and support links</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Admin Manual</h2>
+        <p>For operators who approve entitlements, review pending requests, and deploy updates.</p>
+        <div class="actions">
+          <a class="btn primary" href="/docs/admin-guide/">Open admin guide</a>
+          <a class="btn" href="/approval-dashboard/">Open dashboard</a>
+        </div>
+        <ul>
+          <li>Manual entitlement approval and plan-change approval</li>
+          <li>Automatic offer approval lifecycle</li>
+          <li>Pending queue and dashboard actions</li>
+          <li>Netlify deployment and QA workflow</li>
+        </ul>
+      </article>
+    </section>
+
+    <div class="footer">If you need the fastest starting point, open the user guide for customer-facing instructions or the admin guide for operational tasks.</div>
+  </div>
+</body>
+</html>
+

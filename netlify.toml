@@ -49,3 +49,18 @@
   for = "/login.html"
   [headers.values]
     Cache-Control = "no-store"
+
+[[headers]]
+  for = "/approval-dashboard"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/approval-dashboard/"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/approval-dashboard/index.html"
+  [headers.values]
+    Cache-Control = "no-store"

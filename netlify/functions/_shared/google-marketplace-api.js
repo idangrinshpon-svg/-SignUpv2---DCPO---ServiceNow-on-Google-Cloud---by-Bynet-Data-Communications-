@@ -175,9 +175,20 @@ async function rejectMarketplaceEntitlement({ entitlementId, reason = 'Rejected 
   return callMarketplaceApi('POST', path, { reason });
 }
 
+async function approveMarketplacePlanChange({ entitlementId, pendingPlanName, reason = 'Approved through Netlify workflow' }) {
+  const provider = requireProviderId();
+  if (!provider) {
+    return { ok: false, skipped: true, error: 'missing_provider_id' };
+  }
+
+  const path = `providers/${provider}/entitlements/${encodeURIComponent(entitlementId)}:approvePlanChange`;
+  return callMarketplaceApi('POST', path, { pendingPlanName, reason });
+}
+
 module.exports = {
   approveMarketplaceAccount,
   approveMarketplaceEntitlement,
+  approveMarketplacePlanChange,
   rejectMarketplaceEntitlement,
   callMarketplaceApi,
   getAccessToken,

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Manual | DCPO ServiceNow on Google Cloud</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(13, 21, 37, 0.96);
+      --text: #e5eefb;
+      --muted: #9fb0ca;
+      --line: rgba(159, 176, 202, 0.16);
+      --blue: #58a6ff;
+      --green: #40c28a;
+      --amber: #f0b84b;
+      --shadow: 0 24px 68px rgba(0, 0, 0, 0.34);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(64, 194, 138, 0.12), transparent 22%),
+        radial-gradient(circle at top right, rgba(88, 166, 255, 0.12), transparent 25%),
+        linear-gradient(180deg, #050a12 0%, #07111f 100%);
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .nav a {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      font-size: 13px;
+    }
+    .hero, .card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: 30px; margin-bottom: 18px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #d8e7ff;
+      background: rgba(88, 166, 255, 0.12);
+      border: 1px solid rgba(88, 166, 255, 0.18);
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0 0 12px; font-size: clamp(30px, 5vw, 50px); line-height: 1.05; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.65; max-width: 920px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card { padding: 22px; }
+    .card h2 { margin: 0 0 8px; font-size: 19px; }
+    .card p, .card li { color: var(--muted); line-height: 1.65; }
+    .card ul { margin: 10px 0 0 20px; }
+    .section { margin-top: 18px; }
+    .section h2 { margin: 0 0 10px; font-size: 20px; }
+    .steps { display: grid; gap: 12px; }
+    .step {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .step strong { display: block; margin-bottom: 6px; color: #fff; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1f6feb); border-color: rgba(88,166,255,.25); }
+    code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 5px; }
+    .foot { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/docs/">Docs</a>
+      <a href="/approval-dashboard/">Approval Dashboard</a>
+      <a href="/entitlement-status/">Entitlement Status</a>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">Admin Manual</div>
+      <h1>How operators review and approve Marketplace requests</h1>
+      <p>This guide is for admins and operators who manage approval workflows, review pending requests, and ship the app through Netlify. It covers manual approvals, automatic approvals, plan changes, and the dashboard controls you can use from the live site.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Approval dashboard</h2>
+        <p>The dashboard aggregates all approval tracks and shows anything waiting for action.</p>
+        <ul>
+          <li>Open <a href="/approval-dashboard/">Approval Dashboard</a>.</li>
+          <li>Use the <strong>Waiting for Approval</strong> section for manual entitlement and plan-change requests.</li>
+          <li>Each pending record has a direct approve button.</li>
+          <li>Use the focused entitlement and account fields to narrow the view.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Approval types</h2>
+        <p>Three different approval tracks appear in the app.</p>
+        <ul>
+          <li><strong>Automatic offer approval</strong> requires customer-account approval before the start time.</li>
+          <li><strong>Manual entitlement approval</strong> applies to <code>ENTITLEMENT_CREATION_REQUESTED</code>.</li>
+          <li><strong>Plan change approval</strong> applies to <code>ENTITLEMENT_PLAN_CHANGE_REQUESTED</code>.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>Manual approval steps</h2>
+      <div class="steps">
+        <div class="step"><strong>1. Find the record</strong> Open the dashboard or the entitlement status page and identify the entitlement ID or account ID that is waiting.</div>
+        <div class="step"><strong>2. Confirm the state</strong> Make sure the record is actually pending and not already approved, rejected, or expired.</div>
+        <div class="step"><strong>3. Approve it</strong> Use the dashboard button or call the backend endpoint for the relevant track.</div>
+        <div class="step"><strong>4. Verify the result</strong> Refresh the dashboard or entitlement record and confirm the status changed to approved or accepted.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Useful endpoints</h2>
+      <div class="steps">
+        <div class="step"><strong>Entitlement approval</strong> <code>POST /.netlify/functions/marketplace-entitlement-approval</code></div>
+        <div class="step"><strong>Plan change approval</strong> <code>POST /.netlify/functions/marketplace-plan-change-approval</code></div>
+        <div class="step"><strong>Google Pub/Sub ingress</strong> <code>POST /.netlify/functions/marketplace-pubsub</code></div>
+        <div class="step"><strong>Dashboard data</strong> <code>GET /.netlify/functions/approval-dashboard-data</code></div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/approval-dashboard/">Open dashboard</a>
+        <a class="btn" href="/entitlement-status/">Open entitlement status</a>
+        <a class="btn" href="/docs/user-guide/">Open user manual</a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Deployment and QA</h2>
+      <div class="steps">
+        <div class="step"><strong>Netlify deploy</strong> Production deploys use the checked-in <code>netlify.toml</code> configuration.</div>
+        <div class="step"><strong>Regression suite</strong> Run <code>npm run qa:full</code> to execute the simulator, live regression checks, and browser smoke tests.</div>
+        <div class="step"><strong>Rollback</strong> Keep the latest commit and tag history so you can return to the last known-good state quickly if needed.</div>
+      </div>
+    </section>
+
+    <div class="foot">If the dashboard queue looks wrong, verify the entitlement record in the backend store first, then re-run the QA suite before deploying again.</div>
+  </div>
+</body>
+</html>
+

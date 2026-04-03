@@ -1,6 +1,6 @@
 const { connectLambda, getStore } = require('@netlify/blobs');
-const { approveMarketplaceEntitlement } = require('./_shared/google-marketplace-api');
-const { approveEntitlementRecord } = require('./_shared/entitlement-lifecycle');
+const { approveMarketplacePlanChange } = require('./_shared/google-marketplace-api');
+const { approvePlanChangeRecord } = require('./_shared/entitlement-lifecycle');
 
 const ENTITLEMENT_STORE = 'marketplace-entitlements';
 const jsonHeaders = {
@@ -67,36 +67,39 @@ exports.handler = async (event) => {
   }
 
   const body = extractBody(event);
-  const accountId = String(body.account_id || body.accountId || body.gcp_account_id || '').trim();
   const entitlementId = String(body.entitlement_id || body.entitlementId || '').trim();
-  const approvalName = String(body.approval_name || body.approvalName || 'entitlement-approval').trim() || 'entitlement-approval';
+  const pendingPlanName = String(body.pending_plan_name || body.pendingPlanName || '').trim();
+  const approvedBy = String(body.approved_by || body.approvedBy || 'manual').trim() || 'manual';
   const reason = String(body.reason || body.approval_reason || 'Approved through Netlify workflow').trim() || 'Approved through Netlify workflow';
 
   if (!entitlementId) {
     return response(400, { error: 'missing_entitlement_id' });
   }
 
-  const googleApproval = await approveMarketplaceEntitlement({ entitlementId, reason });
+  const googleApproval = await approveMarketplacePlanChange({ entitlementId, pendingPlanName, reason });
   const remoteSkipped = Boolean(googleApproval.skipped);
 
   if (!googleApproval.ok && !remoteSkipped) {
-    return response(502, { error: 'google_entitlement_approval_failed', detail: googleApproval.error });
+    return response(502, { error: 'google_plan_change_approval_failed', detail: googleApproval.error });
   }
 
   const store = await loadStore(event);
   const entitlementRecord = await updateLatestEntitlement(store, entitlementId, (record) =>
-    approveEntitlementRecord(record, { approvedBy: accountId || approvalName, accountId: accountId || record.accountId || null }),
+    approvePlanChangeRecord(record, {
+      approvedBy,
+      pendingPlanName: pendingPlanName || record.pendingPlanName || record.entitlement?.newPendingPlan || null,
+    }),
   );
 
   return response(200, {
     ok: true,
+    remoteSkipped,
     entitlement: entitlementRecord ? {
       id: entitlementRecord.entitlement.id,
       status: entitlementRecord.status,
-      approvalStatus: entitlementRecord.approvalStatus,
-      approvalApprovedAt: entitlementRecord.approvalApprovedAt || null,
-      approvalRejectedAt: entitlementRecord.approvalRejectedAt || null,
+      planChangeStatus: entitlementRecord.planChangeStatus,
+      pendingPlanName: entitlementRecord.pendingPlanName || null,
+      planChangeApprovedAt: entitlementRecord.planChangeApprovedAt || null,
     } : null,
-    remoteSkipped,
   });
 };
