@@ -400,12 +400,17 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
 
     approval_response = request(
         "POST",
-        f"{base_url}/.netlify/functions/marketplace-entitlement-approval",
-        json_body={"entitlement_id": entitlement_id, "approved_by": "regression-check"},
+        f"{base_url}/.netlify/functions/marketplace-account-approval",
+        json_body={
+            "entitlement_id": entitlement_id,
+            "account_id": "demo-account",
+            "approved_by": "regression-check",
+            "approval_name": "account-approval",
+        },
     )
     expect(
         approval_response.status == 200 and '"approvalStatus":"approved"' in approval_response.body,
-        "POST marketplace-entitlement-approval approves the stored offer",
+        "POST marketplace-account-approval approves the stored account",
         f"got status={approval_response.status}, body={approval_response.body!r}",
         failures,
     )
@@ -455,11 +460,11 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
 
     entitlement_page = request(
         "GET",
-        f"{base_url}/entitlement-status/?entitlement_id={entitlement_id}",
+        f"{base_url}/entitlement-status/?entitlement_id={entitlement_id}&account_id=demo-account",
     )
     expect_ok_or_trailing_slash_redirect(entitlement_page, "/entitlement-status", "GET /entitlement-status resolves correctly", failures)
     expect(
-        "Approve Customer Account" in entitlement_page.body and "Approval Status" in entitlement_page.body,
+        "Approve Customer Account" in entitlement_page.body and "Approval Status" in entitlement_page.body and "Account ID" in entitlement_page.body,
         "entitlement status page exposes approval controls and state",
         "missing approval control markup",
         failures,
@@ -475,6 +480,7 @@ def run_local_checks(failures: list[str]) -> None:
             "require('./netlify/functions/gcp-signup.js');"
             "require('./netlify/functions/marketplace-entitlements.js');"
             "require('./netlify/functions/marketplace-pubsub.js');"
+            "require('./netlify/functions/marketplace-account-approval.js');"
             "require('./netlify/functions/marketplace-entitlement-approval.js');"
             "require('./netlify/functions/marketplace-entitlements-reconcile.js');"
             "console.log('syntax_ok');"

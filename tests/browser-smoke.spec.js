@@ -38,6 +38,8 @@ test("signup verified metadata is visible", async ({ page }) => {
   await expect(page.locator("#gcp-approval-state-view")).toContainText("pending");
   await expect(page.locator("#gcp-start-view")).toContainText("2026-04-10");
   await expect(page.locator("#gcp-note")).toContainText(/scheduled/i);
+  await expect(page.locator("#gcp-actions")).toBeVisible();
+  await expect(page.locator("#gcp-status-link")).toHaveAttribute("href", /entitlement-status/);
 });
 
 test("login page renders expected content", async ({ page }) => {
@@ -86,10 +88,11 @@ test("entitlement status page renders scheduled offers", async ({ page }) => {
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(sampleEntitlement) });
   });
 
-  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-support");
+  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-support&account_id=demo-account");
   await expect(page.getByRole("heading", { name: /Track When a Private Offer Becomes Active/i })).toBeVisible();
   await expect(page.locator("#status-badge")).toContainText("scheduled");
   await expect(page.locator("#entitlement-id")).toContainText("demo-entitlement-support");
+  await expect(page.locator("#account-id")).toContainText("demo-account");
   await expect(page.locator("#start-time")).toContainText("2026-04-10");
   await expect(page.getByRole("button", { name: /Approve Customer Account/i })).toBeVisible();
   await expect(page.locator("#approval-status")).toContainText("pending");
@@ -108,7 +111,7 @@ test("entitlement status page renders rejected offers", async ({ page }) => {
     });
   });
 
-  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-rejected");
+  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-rejected&account_id=demo-account");
   await expect(page.locator("#status-badge")).toContainText("rejected");
   await expect(page.locator("#note")).toContainText(/automatically rejected/i);
   await expect(page.getByRole("button", { name: /Approve Customer Account/i })).toHaveCount(0);

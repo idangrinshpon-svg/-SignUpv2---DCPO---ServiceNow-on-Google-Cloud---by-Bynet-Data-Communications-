@@ -100,6 +100,7 @@ function approveEntitlementRecord(record, options = {}) {
   const next = deepClone(record) || {};
   next.approvalRequired = true;
   next.approvalStatus = 'approved';
+  next.accountId = options.accountId || next.accountId || null;
   next.approvalApprovedAt = new Date(now).toISOString();
   next.approvalApprovedBy = options.approvedBy || 'manual';
   delete next.approvalRejectedAt;

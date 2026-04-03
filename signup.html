@@ -102,6 +102,9 @@
     .gcp-meta-item strong{font-size:12px;color:var(--txt);word-break:break-word}
     .gcp-note{display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--rs);padding:12px 14px;margin-top:12px;font-size:12px;line-height:1.6;color:#1e40af}
     .gcp-note.show{display:block}
+    .gcp-actions{display:none;margin-top:12px;gap:10px;flex-wrap:wrap}
+    .gcp-actions.show{display:flex}
+    .gcp-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--bd);background:#fff;color:var(--blue);text-decoration:none;font-size:12px;font-weight:600}
 
     /* Error banner */
     .err-bar{display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--rs);padding:10px 14px;margin-bottom:20px}
@@ -267,6 +270,9 @@
         </div>
       </div>
       <div class="gcp-note" id="gcp-note"></div>
+      <div class="gcp-actions" id="gcp-actions">
+        <a class="gcp-link" id="gcp-status-link" href="/entitlement-status/">View Entitlement Status</a>
+      </div>
 
       <!-- Error banner -->
       <div class="err-bar" id="err-bar">
@@ -384,6 +390,9 @@
       : record.status === 'rejected'
         ? 'This offer was automatically rejected because customer account approval was not completed before the scheduled start time.'
         : 'The entitlement has been accepted. If the offer is active, continue with normal provisioning and access setup.';
+    var statusLink = document.getElementById('gcp-status-link');
+    statusLink.href = '/entitlement-status/?account_id=' + encodeURIComponent(document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
+    document.getElementById('gcp-actions').classList.add('show');
   }
 
   function showError(msg){
@@ -430,13 +439,15 @@
     document.getElementById('gcp-account').value=account;
     document.getElementById('gcp-identity').value=identity;
 
-      if(account || identity || verified){
+    if(account || identity || verified){
       document.getElementById('gcp-meta').classList.add('show');
       setText('gcp-account-view', account, 'Not available');
       setText('gcp-identity-view', identity, 'Not available');
       setText('gcp-offer-view', offerState, 'Not available');
       setText('gcp-approval-view', approvalMode, 'Not available');
       setText('gcp-approval-state-view', params.get('approval_status') || 'pending', 'Not available');
+      document.getElementById('gcp-status-link').href = '/entitlement-status/?account_id=' + encodeURIComponent(account || document.getElementById('gcp-account').value || '') + '&entitlement_id=latest';
+      document.getElementById('gcp-actions').classList.add('show');
     }
 
     if(verified){

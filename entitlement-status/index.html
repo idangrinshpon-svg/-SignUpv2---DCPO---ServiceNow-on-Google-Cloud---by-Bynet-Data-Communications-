@@ -174,6 +174,10 @@
             <strong id="entitlement-id">Not loaded</strong>
           </div>
           <div class="pill">
+            <span>Account ID</span>
+            <strong id="account-id">Not loaded</strong>
+          </div>
+          <div class="pill">
             <span>Event Type</span>
             <strong id="event-type">Not loaded</strong>
           </div>
@@ -231,8 +235,9 @@
     (function () {
       var params = new URLSearchParams(window.location.search);
       var entitlementId = params.get('entitlement_id') || '';
+      var accountId = params.get('account_id') || '';
       var endpoint = '/.netlify/functions/marketplace-entitlements' + (entitlementId ? '?entitlement_id=' + encodeURIComponent(entitlementId) : '?latest=1');
-      var approvalEndpoint = '/.netlify/functions/marketplace-entitlement-approval';
+      var approvalEndpoint = '/.netlify/functions/marketplace-account-approval';
       var currentRecord = null;
 
       function setText(id, value, fallback) {
@@ -250,7 +255,8 @@
 
       function setApprovalButton(record) {
         var button = document.getElementById('approve-btn');
-        var canApprove = !!(record && record.approvalStatus === 'pending' && record.status !== 'rejected');
+        var hasAccountId = !!(accountId || (record && record.accountId));
+        var canApprove = !!(record && hasAccountId && record.approvalStatus === 'pending' && record.status !== 'rejected');
         button.style.display = canApprove ? 'inline-flex' : 'none';
         button.disabled = !canApprove;
       }
@@ -259,6 +265,7 @@
         if (!record) return;
         currentRecord = record;
         var entitlement = record.entitlement || {};
+        var resolvedAccountId = accountId || record.accountId || '';
         setStatus(record.status);
         setText('headline', record.status === 'scheduled'
           ? 'Offer is scheduled to start later'
@@ -271,6 +278,7 @@
             ? 'The Marketplace entitlement missed the approval window and was automatically rejected.'
             : 'The Marketplace entitlement has been accepted and the activation window is available below.');
         setText('entitlement-id', entitlement.id, 'Not loaded');
+        setText('account-id', resolvedAccountId || 'Not loaded', 'Not loaded');
         setText('event-type', record.eventType, 'Not loaded');
         setText('approval-status', record.approvalStatus || 'Not loaded', 'Not loaded');
         setText('approved-at', record.approvalApprovedAt || 'Not loaded', 'Not loaded');
@@ -284,7 +292,7 @@
             : 'Automatic offer approval still requires account approval before the scheduled start date. If approval is not completed in time, the offer is automatically rejected.')
           : record.status === 'rejected'
             ? 'The offer was automatically rejected because customer account approval was not completed before the scheduled start time.'
-          : 'Once the offer is active, continue with the standard provisioning and customer access flow.';
+            : 'Once the offer is active, continue with the standard provisioning and customer access flow.';
         setApprovalButton(record);
       }
 
@@ -305,6 +313,8 @@
           },
           body: JSON.stringify({
             entitlement_id: currentRecord.entitlement.id,
+            account_id: accountId || currentRecord.accountId || '',
+            approval_name: 'account-approval',
             approved_by: 'customer-account',
           }),
         })
@@ -334,6 +344,7 @@
           setText('headline', 'No entitlement data found yet', 'No entitlement data found yet');
           setText('summary', 'Submit a Marketplace entitlement event or wait for the backend to store the latest accepted offer.', 'No entitlement data found yet');
           setText('entitlement-id', entitlementId || 'latest');
+          setText('account-id', accountId || 'latest account', 'Not loaded');
           setApprovalButton(null);
         });
 
