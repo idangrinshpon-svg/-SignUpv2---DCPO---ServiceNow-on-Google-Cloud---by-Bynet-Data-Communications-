@@ -361,6 +361,12 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         f"found links: {signup_links.hrefs!r}",
         failures,
     )
+    expect(
+        "/docs/" in signup_links.hrefs,
+        "signup page links to docs",
+        f"found links: {signup_links.hrefs!r}",
+        failures,
+    )
 
     login_links = LinkCollector()
     login_links.feed(login.body)
@@ -373,6 +379,12 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     expect(
         "/privacy" in login_links.hrefs and "/terms" in login_links.hrefs and "/contact" in login_links.hrefs,
         "login page footer links point to internal subpages",
+        f"found links: {login_links.hrefs!r}",
+        failures,
+    )
+    expect(
+        "/docs/" in login_links.hrefs,
+        "login page links to docs",
         f"found links: {login_links.hrefs!r}",
         failures,
     )

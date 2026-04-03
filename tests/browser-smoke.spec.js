@@ -171,6 +171,18 @@ test("footer subpages exist", async ({ page }) => {
 
   await page.goto("/contact");
   await expect(page.getByRole("heading", { name: /Contact/i })).toBeVisible();
+
+  await page.goto("/marketplace");
+  await expect(page.getByRole("link", { name: /Docs/i })).toBeVisible();
+
+  await page.goto("/instance-help");
+  await expect(page.getByRole("link", { name: /Docs/i })).toBeVisible();
+
+  await page.goto("/access-help/?instance=acme&target=https%3A%2F%2Facme.service-now.com%2Flogin.do");
+  await expect(page.getByRole("link", { name: /Docs/i })).toBeVisible();
+
+  await page.goto("/contact");
+  await expect(page.getByRole("link", { name: /Docs/i })).toBeVisible();
 });
 
 test("guide subpages exist", async ({ page }) => {
@@ -192,6 +204,9 @@ test("guide subpages exist", async ({ page }) => {
 
   await page.goto("/docs/admin-guide/");
   await expect(page.getByRole("heading", { name: /How operators review and approve Marketplace requests/i })).toBeVisible();
+
+  await page.goto("/signup-simulator/");
+  await expect(page.getByRole("link", { name: /Docs/i })).toBeVisible();
 });
 
 test("signup simulator page renders replay controls", async ({ page }) => {
