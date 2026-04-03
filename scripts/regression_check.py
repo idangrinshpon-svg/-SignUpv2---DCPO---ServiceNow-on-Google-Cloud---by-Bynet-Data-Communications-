@@ -377,12 +377,12 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     entitlement_event = make_sample_entitlement(entitlement_id)
     entitlement_seed = request(
         "POST",
-        f"{base_url}/.netlify/functions/marketplace-entitlements",
+        f"{base_url}/.netlify/functions/marketplace-pubsub",
         json_body=make_pubsub_envelope(entitlement_event),
     )
     expect(
         entitlement_seed.status == 202,
-        "POST marketplace-entitlements stores accepted offer",
+        "POST marketplace-pubsub stores accepted offer",
         f"got status={entitlement_seed.status}, body={entitlement_seed.body!r}",
         failures,
     )
@@ -429,7 +429,7 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
     )
     expect(
         rejected_seed.status == 202,
-        "POST marketplace-entitlements auto-rejects past-start offers",
+        "POST marketplace-pubsub auto-rejects past-start offers",
         f"got status={rejected_seed.status}, body={rejected_seed.body!r}",
         failures,
     )
@@ -474,6 +474,7 @@ def run_local_checks(failures: list[str]) -> None:
             "require('./netlify/functions/gcp-login.js');"
             "require('./netlify/functions/gcp-signup.js');"
             "require('./netlify/functions/marketplace-entitlements.js');"
+            "require('./netlify/functions/marketplace-pubsub.js');"
             "require('./netlify/functions/marketplace-entitlement-approval.js');"
             "require('./netlify/functions/marketplace-entitlements-reconcile.js');"
             "console.log('syntax_ok');"
