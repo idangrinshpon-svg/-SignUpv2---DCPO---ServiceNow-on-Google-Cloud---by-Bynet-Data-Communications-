@@ -11,9 +11,11 @@ Optional:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 import urllib.error
 import urllib.parse
@@ -63,10 +65,14 @@ def request(
     *,
     headers: dict[str, str] | None = None,
     form_data: dict[str, str] | None = None,
+    json_body: object | None = None,
 ) -> Response:
     data = None
     req_headers = dict(headers or {})
-    if form_data is not None:
+    if json_body is not None:
+        data = json.dumps(json_body).encode("utf-8")
+        req_headers.setdefault("Content-Type", "application/json")
+    elif form_data is not None:
         data = urllib.parse.urlencode(form_data).encode("utf-8")
         req_headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
@@ -116,6 +122,39 @@ def make_expired_jwt() -> str:
         return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
     return f"{b64url(header)}.{b64url(payload)}.sig"
+
+
+def make_future_iso(days: int) -> str:
+    dt = datetime.now(timezone.utc) + timedelta(days=days)
+    return dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def make_sample_entitlement(entitlement_id: str) -> dict[str, object]:
+    start = make_future_iso(7)
+    end = make_future_iso(37)
+    return {
+        "eventId": "evt-demo-1",
+        "eventType": "ENTITLEMENT_OFFER_ACCEPTED",
+        "entitlement": {
+            "id": entitlement_id,
+            "updateTime": make_future_iso(0),
+            "newPendingOfferDuration": "P30D",
+            "newOfferStartTime": start,
+            "newOfferEndTime": end,
+        },
+    }
+
+
+def make_pubsub_envelope(payload: dict[str, object]) -> dict[str, object]:
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    return {
+        "message": {
+            "data": base64.b64encode(raw).decode("ascii"),
+            "messageId": "demo-message-1",
+            "publishTime": make_future_iso(0),
+        },
+        "subscription": "projects/demo/subscriptions/marketplace-entitlements",
+    }
 
 
 def expect(condition: bool, label: str, detail: str, failures: list[str]) -> None:
@@ -318,6 +357,37 @@ def run_live_checks(base_url: str, failures: list[str]) -> None:
         failures,
     )
 
+    entitlement_id = "demo-entitlement-support"
+    entitlement_event = make_sample_entitlement(entitlement_id)
+    entitlement_seed = request(
+        "POST",
+        f"{base_url}/.netlify/functions/marketplace-entitlements",
+        json_body=make_pubsub_envelope(entitlement_event),
+    )
+    expect(
+        entitlement_seed.status == 202,
+        "POST marketplace-entitlements stores accepted offer",
+        f"got status={entitlement_seed.status}, body={entitlement_seed.body!r}",
+        failures,
+    )
+
+    entitlement_record = request(
+        "GET",
+        f"{base_url}/.netlify/functions/marketplace-entitlements?entitlement_id={entitlement_id}",
+    )
+    expect(
+        entitlement_record.status == 200 and entitlement_id in entitlement_record.body and "scheduled" in entitlement_record.body,
+        "GET marketplace-entitlements returns stored entitlement record",
+        f"got status={entitlement_record.status}, body={entitlement_record.body!r}",
+        failures,
+    )
+
+    entitlement_page = request(
+        "GET",
+        f"{base_url}/entitlement-status/?entitlement_id={entitlement_id}",
+    )
+    expect_ok_or_trailing_slash_redirect(entitlement_page, "/entitlement-status", "GET /entitlement-status resolves correctly", failures)
+
 
 def run_local_checks(failures: list[str]) -> None:
     node_cmd = [
@@ -326,6 +396,7 @@ def run_local_checks(failures: list[str]) -> None:
         (
             "require('./netlify/functions/gcp-login.js');"
             "require('./netlify/functions/gcp-signup.js');"
+            "require('./netlify/functions/marketplace-entitlements.js');"
             "console.log('syntax_ok');"
         ),
     ]

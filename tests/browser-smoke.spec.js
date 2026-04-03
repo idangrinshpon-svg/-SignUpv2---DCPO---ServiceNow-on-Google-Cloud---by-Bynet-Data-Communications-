@@ -1,5 +1,20 @@
 const { test, expect } = require("@playwright/test");
 
+const sampleEntitlement = {
+  eventId: "evt-demo-1",
+  eventType: "ENTITLEMENT_OFFER_ACCEPTED",
+  status: "scheduled",
+  receivedAt: "2026-04-03T00:00:00.000Z",
+  isAutomaticApproval: true,
+  entitlement: {
+    id: "demo-entitlement-support",
+    updateTime: "2026-04-03T00:00:00.000Z",
+    newPendingOfferDuration: "P30D",
+    newOfferStartTime: "2026-04-10T00:00:00.000Z",
+    newOfferEndTime: "2026-05-10T00:00:00.000Z",
+  },
+};
+
 test("signup page renders expected content", async ({ page }) => {
   await page.goto("/signup");
   await expect(page).toHaveTitle(/Sign Up/);
@@ -9,13 +24,18 @@ test("signup page renders expected content", async ({ page }) => {
 });
 
 test("signup verified metadata is visible", async ({ page }) => {
+  await page.route(/.*\/\.netlify\/functions\/marketplace-entitlements.*/, async (route) => {
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(sampleEntitlement) });
+  });
   await page.goto("/signup?verified=1&gcp_account_id=demo-account&gcp_user_identity=demo-uid&offer_state=accepted&approval_mode=automatic");
   await expect(page.locator("#tok-ok")).toBeVisible();
   await expect(page.locator("#gcp-meta")).toBeVisible();
   await expect(page.locator("#gcp-account-view")).toContainText("demo-account");
   await expect(page.locator("#gcp-identity-view")).toContainText("demo-uid");
-  await expect(page.locator("#gcp-offer-view")).toContainText("accepted");
+  await expect(page.locator("#gcp-offer-view")).toContainText("scheduled");
   await expect(page.locator("#gcp-approval-view")).toContainText("automatic");
+  await expect(page.locator("#gcp-start-view")).toContainText("2026-04-10");
+  await expect(page.locator("#gcp-note")).toContainText(/scheduled/i);
 });
 
 test("login page renders expected content", async ({ page }) => {
@@ -57,4 +77,16 @@ test("guide subpages exist", async ({ page }) => {
   await page.goto("/access-help/?instance=acme&target=https%3A%2F%2Facme.service-now.com%2Flogin.do");
   await expect(page.getByRole("heading", { name: /Complete Access With Your Service Provider/i })).toBeVisible();
   await expect(page.locator("#instance-value")).toContainText("acme.service-now.com");
+});
+
+test("entitlement status page renders scheduled offers", async ({ page }) => {
+  await page.route(/.*\/\.netlify\/functions\/marketplace-entitlements.*/, async (route) => {
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(sampleEntitlement) });
+  });
+
+  await page.goto("/entitlement-status/?entitlement_id=demo-entitlement-support");
+  await expect(page.getByRole("heading", { name: /Track When a Private Offer Becomes Active/i })).toBeVisible();
+  await expect(page.locator("#status-badge")).toContainText("scheduled");
+  await expect(page.locator("#entitlement-id")).toContainText("demo-entitlement-support");
+  await expect(page.locator("#start-time")).toContainText("2026-04-10");
 });

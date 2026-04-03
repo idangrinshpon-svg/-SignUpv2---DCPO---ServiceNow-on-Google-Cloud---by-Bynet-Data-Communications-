@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.7.4"
   }
 }
